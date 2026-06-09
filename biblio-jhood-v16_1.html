@@ -1,3234 +1,432 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>La Bibliothèque Jhood !</title>
-
-<!-- ════════════════════════════════════════════════════════════════════
-     🎨 BIBLIO JHOOD — v4 (vraiment Jhood)
-     ════════════════════════════════════════════════════════════════════
-     Polices fidèles à la charte Jhood :
-       • Hanken Grotesk (Google Fonts) — alternative free de la police N27 de Jhood
-         → utilisée pour tous les titres (gros, condensés, chunky)
-       • Montserrat (Google Fonts) — police de texte officielle Jhood
-         → utilisée pour le corps de texte et les éléments UI
-       • L'icône Jhood officielle (J! blanc dans rond bleu) est intégrée
-         directement dans le fichier en base64 (variable --jh-icon)
-
-     POUR MODIFIER LE SITE FACILEMENT, regardez ces 3 zones :
-       1. Variables CSS (:root)        → couleurs, polices
-       2. Bloc CONFIG (en haut du JS)  → textes, slogans, valeurs
-       3. CATS / DEMO_BOOKS / etc.     → catégories et données de démo
-     ════════════════════════════════════════════════════════════════════ -->
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800;900&family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-<!-- Librairie de scan de codes-barres (ZXing — utilisée pour scanner l'ISBN du livre) -->
-<script src="https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/umd/index.min.js"></script>
-
-<style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-
-/* ════════════════════════════════════════════════════
-   ZONE 1 — VARIABLES (couleurs, polices, espacements)
-   ════════════════════════════════════════════════════ */
-:root{
-  /* === Couleurs OFFICIELLES Jhood (charte graphique 2025) === */
-  --jh-black:#000812;          /* Primaire Black */
-  --jh-white:#FFFFFF;          /* Primaire White */
-  --jh-orange:#FC9627;         /* Secondaire Orange */
-  --jh-orange-light:#FFDE94;   /* Secondaire Light Orange (= jaune logo) */
-  --jh-yellow:#FFDE94;         /* alias Light Orange */
-  --jh-teal:#429DAC;           /* Secondaire Light Blue */
-  --jh-dark:#043A51;           /* Secondaire Blue (le bleu pétrole signature) */
-  --jh-cream:#FFFBF5;          /* crème de fond (utile pour cards) */
-
-  /* Gradient "Space" officiel — orientation 60° / Orange→LightOrange→LightBlue→Blue→Black */
-  --jh-grad:linear-gradient(110deg,#FC9627 0%,#FFDE94 22%,#429DAC 50%,#043A51 78%,#000812 100%);
-  --jh-grad-soft:linear-gradient(135deg,#FFDE94 0%,#429DAC 50%,#043A51 100%);
-
-  /* UI neutres */
-  --bg:#FFFFFF;
-  --surface:#FFFFFF;
-  --border:#E8E8E8;
-  --border-soft:#F0F0F0;
-  --text:#043A51;              /* texte principal = bleu Jhood (au lieu de noir) */
-  --text-soft:#4A5568;
-  --text-mute:#94A3B8;
-
-  /* === Polices officielles Jhood === */
-  --ff-display:'Hanken Grotesk','Montserrat',system-ui,sans-serif; /* alternative N27 */
-  --ff:'Montserrat','Inter',system-ui,-apple-system,sans-serif;
-  --ff-script:'Hanken Grotesk',sans-serif; /* on garde la même police partout */
-
-  /* Rayons */
-  --r-sm:10px;
-  --r-md:16px;
-  --r-lg:24px;
-  --r-xl:32px;
-
-  /* Icône Jhood officielle (J! blanc dans rond bleu) */
-  --jh-icon:url('data:image/webp;base64,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');
-}
-
-html,body{height:100%}
-body{
-  font-family:var(--ff);
-  background:var(--bg);
-  color:var(--text);
-  min-height:100vh;
-  -webkit-font-smoothing:antialiased;
-  -moz-osx-font-smoothing:grayscale;
-  font-weight:500;
-}
-input,select,textarea,button{font-family:var(--ff);font-size:inherit}
-button{cursor:pointer;border:none;background:none;color:inherit}
-a{color:inherit;text-decoration:none}
-::-webkit-scrollbar{width:8px;height:8px}
-::-webkit-scrollbar-thumb{background:#ddd;border-radius:4px}
-::-webkit-scrollbar-thumb:hover{background:#bbb}
-
-/* ════════════════════════════════════════════════════
-   HEADER (style identique au site Jhood)
-   ════════════════════════════════════════════════════ */
-#hdr{
-  display:flex;align-items:center;gap:1.25rem;
-  padding:0 2rem;height:84px;
-  background:#fff;
-  position:sticky;top:0;z-index:100;
-}
-.logo-jh{
-  display:inline-block;flex-shrink:0;
-  width:60px;height:60px;
-  background-image:var(--jh-icon);
-  background-size:contain;
-  background-repeat:no-repeat;
-  background-position:center;
-  transition:transform .3s cubic-bezier(.2,.7,.3,1);
-}
-.logo-jh:hover{transform:rotate(-6deg) scale(1.05)}
-
-/* Texte "Biblio Jhood" à côté du logo (style charte) */
-.logo-text{
-  font-family:var(--ff-display);
-  font-weight:900;font-size:18px;
-  color:var(--jh-dark);
-  letter-spacing:-.015em;line-height:1;
-  white-space:nowrap;
-}
-.logo-text .dot{color:var(--jh-orange-light)}
-.logo-text small{
-  display:block;font-family:var(--ff);
-  font-weight:600;font-size:11px;
-  color:var(--text-mute);
-  letter-spacing:.04em;text-transform:none;
-  margin-top:4px;
-  letter-spacing:0;
-}
-
-#hdr-nav{
-  display:flex;align-items:center;gap:1.5rem;
-  flex:1;
-}
-.nav-link{
-  font-weight:600;font-size:14px;color:var(--text);
-  transition:color .15s;
-  white-space:nowrap;
-}
-.nav-link:hover{color:var(--jh-orange)}
-.nav-link.active{color:var(--jh-orange)}
-
-.hdr-search{
-  flex:1;max-width:380px;margin-left:auto;position:relative;
-}
-.hdr-search input{
-  width:100%;height:44px;
-  border-radius:24px;border:1.5px solid var(--border);
-  background:#FAFAFA;
-  padding:0 18px 0 44px;
-  font-size:14px;font-weight:500;color:var(--text);outline:none;
-  transition:all .2s;
-}
-.hdr-search input:focus{
-  border-color:var(--jh-orange);
-  background:#fff;
-  box-shadow:0 0 0 4px rgba(252,150,39,.12);
-}
-.hdr-search input::placeholder{color:#bbb;font-weight:500}
-.hdr-search-ico{
-  position:absolute;left:16px;top:50%;transform:translateY(-50%);
-  font-size:16px;opacity:.5;pointer-events:none;
-}
-
-.hdr-actions{display:flex;align-items:center;gap:10px}
-
-/* Bouton "Devenez Jhooder" — gradient signature */
-.btn-add{
-  position:relative;
-  background:var(--jh-grad);
-  background-size:220% 100%;
-  color:#fff;
-  border-radius:24px;
-  padding:11px 22px;
-  font-weight:800;font-size:14px;
-  display:inline-flex;align-items:center;gap:7px;
-  transition:all .35s ease;
-  white-space:nowrap;
-  box-shadow:0 2px 12px rgba(252,150,39,.22);
-}
-.btn-add:hover{
-  background-position:100% 0;
-  transform:translateY(-1px);
-  box-shadow:0 8px 22px rgba(252,150,39,.32);
-}
-
-/* ════════════════════════════════════════════════════
-   HERO (style "CHERCHEZ. TROUVEZ. JHOODEZ!" du site)
-   ════════════════════════════════════════════════════ */
-#hero{
-  background:var(--jh-grad);
-  position:relative;overflow:hidden;
-  padding:5rem 2rem 5.5rem;
-  text-align:center;
-}
-/* Rayons diagonaux subtils, comme sur le hero du site */
-#hero::before{
-  content:'';position:absolute;inset:0;
-  background:
-    linear-gradient(105deg,transparent 30%,rgba(255,255,255,.18) 38%,transparent 46%),
-    linear-gradient(105deg,transparent 55%,rgba(255,255,255,.12) 62%,transparent 68%);
-  pointer-events:none;
-}
-.hero-eyebrow{
-  position:relative;
-  font-family:var(--ff);
-  font-weight:700;
-  font-size:14px;
-  color:#fff;
-  letter-spacing:.02em;
-  margin-bottom:1rem;
-  text-shadow:0 1px 8px rgba(0,0,0,.2);
-}
-.hero-title{
-  position:relative;
-  font-family:var(--ff-display);
-  font-weight:900;
-  font-size:clamp(2.5rem,7vw,5.5rem);
-  color:#fff;
-  letter-spacing:-.015em;line-height:.95;
-  margin-bottom:2rem;
-  text-shadow:0 4px 30px rgba(0,0,0,.18);
-  text-transform:uppercase;
-}
-.hero-title .accent{
-  color:var(--jh-orange-light);
-  font-style:normal;
-}
-/* Petit point jaune décoratif type charte Jhood ("Jhood.") */
-.hero-title .dot-accent{
-  color:var(--jh-orange-light);
-  display:inline-block;
-}
-
-/* Sous-titre du hero */
-.hero-sub{
-  position:relative;
-  font-family:var(--ff);
-  font-size:clamp(15px,1.6vw,17px);
-  font-weight:500;
-  color:rgba(255,255,255,.92);
-  max-width:560px;margin:0 auto;
-  line-height:1.55;
-  text-shadow:0 1px 8px rgba(0,0,0,.15);
-}
-
-/* ════════════════════════════════════════════════════
-   SECTION CARTES COLORÉES (style "Tous secteurs / BTP / Tertiaire")
-   ════════════════════════════════════════════════════ */
-#cats-section{
-  max-width:1280px;margin:0 auto;
-  padding:4rem 2rem 1.5rem;
-}
-.cats-title{
-  font-family:var(--ff-display);
-  font-weight:900;
-  font-size:clamp(1.8rem,3.5vw,2.6rem);
-  text-transform:uppercase;
-  letter-spacing:-.01em;line-height:1;
-  margin-bottom:.5rem;color:var(--jh-dark);
-}
-.cats-sub{
-  font-size:15px;color:var(--text-soft);
-  max-width:680px;margin-bottom:2rem;line-height:1.6;font-weight:500;
-}
-.cats-sub strong{font-weight:700;color:var(--text)}
-
-.cats-grid{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:1.25rem;
-}
-@media(max-width:840px){.cats-grid{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:540px){.cats-grid{grid-template-columns:1fr}}
-
-/* Carte plate colorée façon "Tous secteurs / BTP / Tertiaire" */
-.cat-card{
-  border-radius:var(--r-md);
-  padding:1.75rem 1.75rem 1.25rem;
-  min-height:200px;
-  display:flex;flex-direction:column;
-  position:relative;
-  cursor:pointer;
-  transition:transform .25s cubic-bezier(.2,.7,.3,1),box-shadow .25s;
-}
-.cat-card:hover{transform:translateY(-4px);box-shadow:0 12px 32px rgba(0,0,0,.12)}
-.cat-card.outline{
-  background:#fff;border:1.5px solid;
-}
-.cat-card-title{
-  font-family:var(--ff-display);
-  font-weight:900;
-  font-size:1.4rem;
-  margin-bottom:.5rem;
-  letter-spacing:-.01em;
-}
-.cat-card-sub{
-  font-size:14.5px;line-height:1.5;flex:1;font-weight:500;
-}
-.cat-card-arrow{
-  margin-top:1rem;
-  font-size:24px;font-weight:900;
-  align-self:flex-end;
-  line-height:1;
-}
-
-/* Variantes de couleurs — comme sur le site */
-.cat-card.yellow{background:var(--jh-orange-light);color:var(--jh-dark)}
-.cat-card.orange{background:var(--jh-orange);color:var(--jh-dark)}
-.cat-card.teal  {background:var(--jh-teal);color:#fff}
-.cat-card.outline-orange{border-color:var(--jh-orange);color:var(--jh-dark)}
-.cat-card.outline-dark  {border-color:var(--jh-dark);color:var(--jh-dark)}
-
-/* ════════════════════════════════════════════════════
-   ONGLETS (au-dessus de la grille)
-   ════════════════════════════════════════════════════ */
-#tabs-section{
-  max-width:1280px;margin:0 auto;
-  padding:2.5rem 2rem 0;
-}
-.tabs-bar{
-  display:flex;align-items:center;gap:.5rem;
-  border-bottom:2px solid var(--border-soft);
-  overflow-x:auto;scrollbar-width:none;
-}
-.tabs-bar::-webkit-scrollbar{display:none}
-.tab{
-  padding:14px 22px;
-  font-family:var(--ff);
-  font-weight:700;font-size:15px;
-  color:var(--text-mute);
-  border-bottom:3px solid transparent;
-  margin-bottom:-2px;
-  transition:all .15s;
-  display:flex;align-items:center;gap:8px;
-  white-space:nowrap;
-}
-.tab:hover{color:var(--text)}
-.tab.on{color:var(--jh-dark);border-bottom-color:var(--jh-orange);font-weight:800}
-.tab .tc{
-  background:#F0F0F0;border-radius:10px;
-  padding:1px 9px;font-size:11px;font-weight:800;color:var(--text-soft);
-}
-.tab.on .tc{background:rgba(252,150,39,.16);color:var(--jh-orange)}
-
-.tabs-right{margin-left:auto;display:flex;gap:8px;align-items:center}
-.btn-share{
-  background:var(--jh-grad);
-  color:#fff;border-radius:20px;
-  padding:8px 16px;
-  font-weight:700;font-size:13px;
-  display:inline-flex;align-items:center;gap:6px;
-  transition:transform .15s;
-}
-.btn-share:hover{transform:scale(1.03)}
-.btn-share.hidden{display:none}
-
-/* ════════════════════════════════════════════════════
-   LAYOUT PRINCIPAL
-   ════════════════════════════════════════════════════ */
-#main{
-  max-width:1280px;margin:0 auto;
-  display:flex;
-  padding:1rem 2rem 4rem;
-  gap:2rem;
-}
-
-/* ── SIDEBAR ── */
-#sidebar{
-  width:240px;flex-shrink:0;
-  padding-top:1.5rem;
-}
-.sb-block{margin-bottom:1.75rem}
-.sb-label{
-  font-family:var(--ff);
-  font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.14em;
-  color:var(--text-mute);
-  padding:0 .75rem;margin-bottom:10px;
-}
-.sb-item{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:10px 14px;
-  font-size:14px;font-weight:600;color:var(--text-soft);
-  border-radius:10px;margin-bottom:2px;
-  cursor:pointer;transition:all .12s;
-}
-.sb-item:hover{background:#F8F9FA;color:var(--text)}
-.sb-item.on{
-  background:var(--jh-yellow);
-  color:var(--jh-dark);font-weight:800;
-}
-.sb-item .sbn{display:flex;align-items:center;gap:9px}
-.sb-cnt{
-  background:rgba(0,0,0,.06);border-radius:10px;
-  padding:1px 8px;font-size:11px;font-weight:800;color:var(--text-mute);
-}
-.sb-item.on .sb-cnt{background:rgba(13,30,44,.1);color:var(--jh-dark)}
-.cat-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
-
-/* ── CONTENU ── */
-#content{flex:1;min-width:0;padding-top:1.5rem}
-.content-bar{
-  display:flex;align-items:center;justify-content:space-between;
-  margin-bottom:1.5rem;flex-wrap:wrap;gap:.75rem;
-}
-.content-count{
-  font-size:15px;font-weight:600;color:var(--text-soft);
-}
-.content-count em{color:var(--jh-orange);font-style:normal;font-weight:800}
-
-/* ════════════════════════════════════════════════════
-   GRILLE DE LIVRES
-   ════════════════════════════════════════════════════ */
-#grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
-  gap:1.5rem;
-}
-
-.bcard{
-  background:#fff;
-  border-radius:var(--r-md);
-  overflow:hidden;
-  border:1px solid var(--border);
-  cursor:pointer;
-  transition:all .25s cubic-bezier(.2,.7,.3,1);
-  display:flex;flex-direction:column;
-  height:420px;          /* hauteur fixe pour uniformité */
-}
-.bcard:hover{
-  transform:translateY(-6px);
-  box-shadow:0 16px 40px rgba(0,0,0,.1);
-  border-color:transparent;
-}
-.bcard-cover{
-  width:100%;
-  height:200px;          /* hauteur fixe au lieu d'aspect-ratio */
-  flex-shrink:0;
-  position:relative;overflow:hidden;
-  display:flex;align-items:center;justify-content:center;
-}
-.bcard-cover img{
-  width:100%;height:100%;
-  object-fit:contain;    /* contain = la couverture entière est visible, sans crop */
-  padding:8px;
-  filter:drop-shadow(0 4px 12px rgba(0,0,0,.15));
-}
-.bcard-fb{
-  width:100%;height:100%;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:14px;text-align:center;color:#fff;
-}
-.bcard-fb .fi{font-size:36px;margin-bottom:8px;opacity:.95}
-.bcard-fb .ft{
-  font-family:var(--ff-display);
-  font-weight:900;
-  font-size:14px;line-height:1.2;
-  margin-bottom:4px;
-  text-transform:uppercase;
-  letter-spacing:-.005em;
-  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
-}
-.bcard-fb .fa{font-size:11px;opacity:.9;font-weight:600}
-
-.avail-tag{
-  position:absolute;top:10px;right:10px;
-  border-radius:6px;padding:4px 10px;
-  font-size:10px;font-weight:800;letter-spacing:.06em;
-  color:#fff;
-  box-shadow:0 2px 8px rgba(0,0,0,.18);
-}
-.av-yes{background:#22C55E}
-.av-no{background:#EF4444}
-
-.bcard-body{
-  padding:12px 14px 14px;
-  flex:1;                /* prend tout l'espace restant */
-  display:flex;flex-direction:column;
-  min-height:0;
-}
-.bcard-title{
-  font-family:var(--ff-display);
-  font-weight:800;
-  font-size:14.5px;line-height:1.25;
-  letter-spacing:-.005em;
-  margin-bottom:3px;color:var(--text);
-  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
-}
-.bcard-author{font-size:12px;color:var(--text-mute);margin-bottom:8px;font-weight:500;
-  display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;
-}
-.bcard-sum{
-  font-size:12px;color:var(--text-soft);line-height:1.5;
-  display:-webkit-box;
-  -webkit-line-clamp:3;-webkit-box-orient:vertical;
-  overflow:hidden;
-  font-weight:500;
-  flex:1 1 auto;
-  min-height:0;
-}
-.bcard-sum-empty{          /* placeholder si pas de résumé */
-  font-size:11.5px;color:var(--text-mute);line-height:1.4;
-  font-style:italic;font-weight:500;
-  flex:1 1 auto;min-height:0;
-}
-.bcard-foot{
-  display:flex;align-items:center;justify-content:space-between;gap:8px;
-  margin-top:10px;flex-shrink:0;
-}
-.cat-chip{
-  border-radius:6px;padding:3px 9px;
-  font-size:10.5px;font-weight:800;
-  white-space:nowrap;letter-spacing:.02em;
-}
-.heart-c{font-size:11.5px;color:var(--text-mute);font-weight:700}
-
-/* ════════════════════════════════════════════════════
-   LISTE PODCASTS / CONFÉRENCES
-   ════════════════════════════════════════════════════ */
-#ilist{display:none;flex-direction:column;gap:1rem}
-.icard{
-  background:#fff;
-  border:1px solid var(--border);
-  border-radius:var(--r-md);
-  padding:1.25rem 1.5rem;
-  display:flex;gap:1.25rem;align-items:flex-start;
-  transition:all .2s;
-}
-.icard:hover{
-  border-color:var(--jh-orange);
-  box-shadow:0 6px 20px rgba(252,150,39,.1);
-  transform:translateY(-2px);
-}
-.iico{
-  width:56px;height:56px;
-  border-radius:14px;
-  display:flex;align-items:center;justify-content:center;
-  font-size:24px;flex-shrink:0;
-}
-.iico.pod{background:rgba(66,157,172,.12)}
-.iico.conf{background:rgba(252,150,39,.12)}
-.icard-main{flex:1;min-width:0}
-.ititle{
-  font-family:var(--ff-display);
-  font-weight:800;font-size:17px;
-  letter-spacing:-.005em;line-height:1.25;
-  margin-bottom:4px;color:var(--text);
-}
-.icreator{font-size:12.5px;color:var(--text-mute);margin-bottom:8px;font-weight:600}
-.ichips{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
-.type-chip{
-  background:rgba(4,58,81,.08);
-  color:var(--jh-dark);
-  border-radius:6px;
-  padding:3px 9px;
-  font-size:10.5px;font-weight:800;
-  white-space:nowrap;letter-spacing:.02em;
-}
-.idesc{font-size:14px;color:var(--text-soft);line-height:1.6;margin-bottom:12px;font-weight:500}
-.imeta{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-.ilink{
-  background:var(--jh-dark);color:#fff;
-  border-radius:8px;padding:7px 14px;
-  font-size:12.5px;font-weight:700;
-  display:inline-flex;align-items:center;gap:5px;
-  transition:all .15s;
-}
-.ilink:hover{background:var(--jh-teal);transform:translateX(2px)}
-.ifrom{font-size:12px;color:var(--text-mute);font-weight:500}
-.ifrom strong{color:var(--text-soft);font-weight:700}
-.cmt-count{
-  font-size:11.5px;color:var(--text-mute);font-weight:700;
-  background:#F5F5F5;padding:2px 8px;border-radius:10px;
-}
-.hbtn{
-  display:flex;flex-direction:column;align-items:center;gap:1px;
-  padding:8px;flex-shrink:0;
-  border-radius:8px;transition:background .15s;
-}
-.hbtn:hover{background:#FFF5F5}
-.hbtn .he{font-size:22px}
-.hbtn .hc{font-size:11.5px;color:var(--text-mute);font-weight:700}
-
-/* ════════════════════════════════════════════════════
-   ÉTAT VIDE
-   ════════════════════════════════════════════════════ */
-.empty{
-  text-align:center;padding:4rem 1rem;
-  color:var(--text-mute);
-}
-.empty-ico{
-  width:84px;height:84px;
-  border-radius:24px;
-  background:var(--jh-grad-soft);
-  display:inline-flex;align-items:center;justify-content:center;
-  font-size:42px;
-  margin-bottom:1.25rem;
-  box-shadow:0 8px 28px rgba(66,157,172,.18);
-}
-.empty h3{
-  font-family:var(--ff-display);
-  font-weight:900;font-size:22px;
-  text-transform:uppercase;letter-spacing:-.005em;
-  color:var(--text);margin-bottom:8px;
-}
-.empty p{font-size:14.5px;line-height:1.6;max-width:380px;margin:0 auto 1.5rem;font-weight:500}
-.empty-cta{
-  background:var(--jh-grad);
-  color:#fff;
-  border-radius:20px;
-  padding:11px 24px;
-  font-weight:800;font-size:14px;
-  display:inline-flex;align-items:center;gap:7px;
-}
-
-/* ════════════════════════════════════════════════════
-   SECTION VALEURS (façon "DONNER DU SENS" du site)
-   ════════════════════════════════════════════════════ */
-#values-section{
-  max-width:1280px;margin:3rem auto 5rem;
-  padding:0 2rem;
-  display:flex;align-items:stretch;gap:1.5rem;
-}
-.values-side{
-  display:flex;align-items:center;justify-content:center;
-  flex-shrink:0;
-  width:60px;
-}
-.values-side-text{
-  font-family:var(--ff-display);
-  font-weight:900;
-  font-size:1.5rem;
-  text-transform:uppercase;letter-spacing:-.005em;
-  color:var(--jh-dark);
-  writing-mode:vertical-rl;
-  transform:rotate(180deg);
-  white-space:nowrap;
-}
-.values-card{
-  flex:1;
-  background:var(--jh-grad);
-  border-radius:var(--r-lg);
-  padding:3rem 3.5rem;
-  position:relative;overflow:hidden;
-  min-height:380px;
-}
-.values-card::before{
-  content:'';position:absolute;inset:0;
-  background:
-    linear-gradient(105deg,transparent 30%,rgba(255,255,255,.18) 38%,transparent 46%),
-    linear-gradient(105deg,transparent 55%,rgba(255,255,255,.12) 62%,transparent 68%);
-  pointer-events:none;
-}
-.values-eyebrow{
-  position:relative;
-  font-size:13px;font-weight:700;color:#fff;
-  letter-spacing:.04em;
-  margin-bottom:1.5rem;
-  opacity:.9;
-}
-.values-list{
-  position:relative;
-  display:flex;flex-direction:column;gap:1.25rem;
-}
-.value{
-  color:#fff;
-}
-.value-name{
-  font-family:var(--ff-display);
-  font-weight:900;
-  font-size:clamp(1.5rem,2.6vw,2rem);
-  text-transform:uppercase;letter-spacing:-.01em;line-height:1;
-  margin-bottom:.4rem;
-}
-.value-desc{
-  font-size:14px;color:rgba(255,255,255,.92);line-height:1.5;font-weight:500;
-}
-@media(max-width:680px){
-  #values-section{flex-direction:column}
-  .values-side{width:100%;height:auto;justify-content:flex-start;padding-left:.5rem}
-  .values-side-text{writing-mode:horizontal-tb;transform:none}
-  .values-card{padding:2rem 1.5rem}
-}
-
-/* ════════════════════════════════════════════════════
-   FOOTER (simple, sobre)
-   ════════════════════════════════════════════════════ */
-#footer{
-  background:var(--jh-dark);
-  color:rgba(255,255,255,.85);
-  padding:2.5rem 2rem 1.5rem;
-  text-align:center;
-}
-.footer-logo{
-  display:inline-block;
-  width:54px;height:54px;
-  background-image:var(--jh-icon);
-  background-size:contain;
-  background-repeat:no-repeat;
-  background-position:center;
-  /* Inverser pour fond sombre : on garde tel quel car l'icône est sur fond bleu  
-     identique au footer, donc le J! ressort en blanc directement */
-  margin-bottom:.75rem;
-}
-.footer-name{
-  font-family:var(--ff-display);
-  font-weight:900;font-size:22px;color:#fff;
-  letter-spacing:-.015em;line-height:1;
-  margin-bottom:.5rem;
-}
-.footer-name .dot{color:var(--jh-orange-light)}
-.footer-tag{
-  font-size:14px;font-weight:500;
-  margin-bottom:1.5rem;
-  color:rgba(255,255,255,.7);
-}
-.footer-credit{
-  font-size:12px;color:rgba(255,255,255,.5);
-  font-weight:500;
-  border-top:1px solid rgba(255,255,255,.1);
-  padding-top:1.25rem;margin-top:1.25rem;
-}
-
-/* ════════════════════════════════════════════════════
-   MODAL
-   ════════════════════════════════════════════════════ */
-.ov{
-  display:none;position:fixed;inset:0;
-  background:rgba(13,30,44,.55);
-  z-index:300;
-  align-items:center;justify-content:center;
-  padding:1rem;
-  backdrop-filter:blur(8px);
-}
-.ov.open{display:flex;animation:fade .25s ease}
-@keyframes fade{from{opacity:0}to{opacity:1}}
-
-.modal{
-  background:#fff;
-  border-radius:var(--r-lg);
-  width:100%;max-width:600px;
-  max-height:92vh;overflow-y:auto;
-  box-shadow:0 24px 80px rgba(0,0,0,.25);
-  animation:rise .3s cubic-bezier(.2,.7,.3,1);
-}
-@keyframes rise{from{transform:translateY(28px) scale(.97);opacity:0}to{transform:translateY(0) scale(1);opacity:1}}
-
-.mhdr{
-  padding:1.5rem 1.75rem;
-  border-bottom:1px solid var(--border-soft);
-  display:flex;align-items:flex-start;justify-content:space-between;
-  gap:1rem;
-}
-.mtitle{
-  font-family:var(--ff-display);
-  font-weight:900;font-size:24px;
-  text-transform:uppercase;letter-spacing:-.01em;
-  color:var(--text);
-}
-.msub{font-size:14px;color:var(--text-mute);margin-top:5px;line-height:1.5;font-weight:500}
-.xbtn{
-  width:36px;height:36px;
-  background:#F5F5F5;border-radius:50%;
-  font-size:20px;color:var(--text-soft);
-  display:flex;align-items:center;justify-content:center;flex-shrink:0;
-  transition:background .15s;
-}
-.xbtn:hover{background:#E8E8E8;color:var(--text)}
-
-.mbody{padding:1.5rem 1.75rem;display:flex;flex-direction:column;gap:1rem}
-
-.fl{display:flex;flex-direction:column;gap:6px}
-.fl label{
-  font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;
-  color:var(--text-mute);
-}
-.fl input,.fl select,.fl textarea{
-  background:#FAFAFA;
-  border:1.5px solid var(--border);
-  border-radius:10px;
-  padding:11px 14px;
-  color:var(--text);font-size:14px;font-weight:500;
-  outline:none;width:100%;
-  transition:all .15s;
-}
-.fl input:focus,.fl select:focus,.fl textarea:focus{
-  border-color:var(--jh-orange);
-  background:#fff;
-  box-shadow:0 0 0 3px rgba(252,150,39,.1);
-}
-.fl input::placeholder,.fl textarea::placeholder{color:#bbb;font-weight:500}
-.frow{display:flex;gap:12px}
-.frow .fl{flex:1}
-
-.mftr{
-  padding:0 1.75rem 1.5rem;
-  display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;
-}
-
-.gbtn{
-  background:var(--jh-grad);
-  color:#fff;
-  border-radius:24px;
-  padding:12px 26px;
-  font-weight:800;font-size:14px;
-  transition:all .25s ease;
-  box-shadow:0 4px 14px rgba(252,150,39,.22);
-  background-size:220% 100%;
-}
-.gbtn:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(252,150,39,.32);background-position:100% 0}
-.cbtn{
-  background:#F5F5F5;color:var(--text-soft);
-  border-radius:24px;padding:12px 22px;
-  font-weight:700;font-size:14px;
-  transition:background .15s;
-}
-.cbtn:hover{background:#EBEBEB}
-
-/* Détail livre */
-.dcover{
-  height:240px;position:relative;overflow:hidden;
-  border-radius:var(--r-lg) var(--r-lg) 0 0;
-  display:flex;align-items:flex-end;
-}
-.dcover img{
-  position:absolute;height:90%;width:auto;
-  left:50%;top:50%;transform:translate(-50%,-50%);
-  object-fit:contain;
-  filter:drop-shadow(0 8px 24px rgba(0,0,0,.4));
-}
-.dcover-info{
-  position:relative;z-index:1;padding:1.25rem 1.5rem;
-  width:100%;
-}
-.dcat-chip{
-  display:inline-flex;align-items:center;gap:5px;
-  border-radius:8px;padding:4px 10px;
-  font-size:11px;font-weight:800;margin-bottom:8px;
-  letter-spacing:.02em;
-}
-.dtitle{
-  font-family:var(--ff-display);
-  font-weight:900;
-  font-size:1.7rem;line-height:1;
-  text-transform:uppercase;letter-spacing:-.01em;
-  color:#fff;margin-bottom:6px;
-  text-shadow:0 2px 12px rgba(0,0,0,.4);
-}
-.dauthor{font-size:14px;color:rgba(255,255,255,.9);font-weight:600}
-
-.borrow-box{
-  border-radius:14px;padding:16px 18px;margin-bottom:1.25rem;
-  display:flex;align-items:center;gap:14px;flex-wrap:wrap;
-}
-.borrow-box.av{background:#F0FDF4;border:1.5px solid #BBF7D0}
-.borrow-box.em{background:#FFF1F2;border:1.5px solid #FECDD3}
-.borrow-box .bbi{font-size:26px}
-.borrow-box .bbm{flex:1;min-width:120px}
-.borrow-label{font-weight:800;font-size:15px}
-.borrow-since{font-size:12px;color:var(--text-mute);margin-top:2px;font-weight:500}
-
-.borrow-btn{
-  padding:10px 20px;border-radius:24px;
-  font-weight:800;font-size:13.5px;
-  transition:all .2s;
-}
-.borrow-btn.take{background:var(--jh-grad);color:#fff;box-shadow:0 4px 12px rgba(252,150,39,.28)}
-.borrow-btn.take:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(252,150,39,.4)}
-.borrow-btn.give{background:#fff;color:var(--text-soft);border:1.5px solid var(--border)}
-.borrow-btn.give:hover{background:#F5F5F5}
-.borrow-btn.locked{background:#F5F5F5;color:var(--text-mute);cursor:default}
-
-.section-label{
-  font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;
-  color:var(--text-mute);margin-bottom:8px;
-}
-.sum-block{
-  background:var(--jh-cream);
-  border-left:3px solid var(--jh-orange);
-  border-radius:0 12px 12px 0;
-  padding:14px 18px;
-  font-size:14.5px;line-height:1.65;color:var(--text-soft);font-weight:500;
-}
-.detail-meta{
-  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;
-  padding-top:1.25rem;
-  border-top:1px solid var(--border-soft);
-  margin-top:1.25rem;
-}
-.detail-meta-info{font-size:12.5px;color:var(--text-mute);font-weight:500}
-.detail-meta-info strong{color:var(--text-soft);font-weight:700}
-.heart-btn{
-  background:#FFF5F5;border:1.5px solid #FED7D7;
-  border-radius:20px;padding:8px 16px;
-  font-weight:700;font-size:13px;color:#E53E3E;
-  display:inline-flex;align-items:center;gap:6px;
-  transition:all .15s;
-}
-.heart-btn:hover{background:#FED7D7;transform:scale(1.04)}
-
-/* IA */
-.ai-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
-.ai-btn{
-  background:var(--jh-grad);
-  color:#fff;border-radius:8px;padding:5px 13px;
-  font-size:11.5px;font-weight:800;
-  transition:opacity .15s;
-}
-.ai-btn:disabled{opacity:.5;cursor:default}
-
-.api-note{
-  background:var(--jh-cream);
-  border:1px solid rgba(252,150,39,.25);
-  border-radius:12px;padding:14px;
-}
-.api-note .lbl{
-  font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;
-  color:#C07000;margin-bottom:6px;
-}
-.api-note input{font-size:12px}
-.api-note .hint{font-size:11.5px;color:var(--text-mute);margin-top:5px;line-height:1.45;font-weight:500}
-
-/* Menu déroulant */
-.add-wrap{position:relative}
-.add-drop{
-  display:none;position:absolute;top:54px;right:0;
-  background:#fff;
-  border:1px solid var(--border);
-  border-radius:var(--r-md);
-  padding:8px;min-width:260px;
-  box-shadow:0 16px 50px rgba(0,0,0,.15);
-  z-index:200;
-  animation:rise .2s ease;
-}
-.add-drop.open{display:block}
-.add-item{
-  display:flex;align-items:center;gap:12px;width:100%;
-  padding:11px 14px;border-radius:10px;
-  font-size:14px;font-weight:600;color:var(--text);
-  text-align:left;transition:background .12s;
-}
-.add-item:hover{background:var(--jh-cream)}
-.add-item .ai{
-  font-size:20px;width:38px;height:38px;
-  border-radius:10px;flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;
-}
-.add-item .ai.bk{background:rgba(252,150,39,.14)}
-.add-item .ai.pd{background:rgba(66,157,172,.14)}
-.add-item .ai.cf{background:rgba(139,92,246,.14)}
-.add-item-text{flex:1}
-.add-item-text small{display:block;font-size:11.5px;color:var(--text-mute);font-weight:500;margin-top:1px}
-
-/* ════════════════════════════════════════════════════
-   NOUVEAU - Badge "Nouveauté", Wishlist, Sync
-   ════════════════════════════════════════════════════ */
-
-/* Badge "Nouveauté" sur les livres récents (≤ 30 jours) */
-.new-tag{
-  position:absolute;top:12px;left:12px;
-  background:var(--jh-orange);
-  color:#fff;
-  border-radius:6px;
-  padding:4px 10px;
-  font-size:10px;font-weight:800;letter-spacing:.06em;
-  box-shadow:0 2px 8px rgba(252,150,39,.3);
-  text-transform:uppercase;
-  animation:newPulse 2s ease-in-out infinite;
-}
-@keyframes newPulse{
-  0%,100%{transform:scale(1)}
-  50%{transform:scale(1.05)}
-}
-
-/* Wishlist — bouton dans la modal détail */
-.wishlist-box{
-  background:#FFF7E6;
-  border:1.5px solid #FED7AA;
-  border-radius:14px;
-  padding:14px 16px;
-  margin-top:1rem;
-  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
-}
-.wishlist-box .wbi{font-size:22px;flex-shrink:0}
-.wishlist-box .wbm{flex:1;min-width:160px}
-.wishlist-label{font-weight:800;font-size:14px;color:#C2410C;line-height:1.3}
-.wishlist-count{font-size:12px;color:var(--text-mute);margin-top:2px;font-weight:500}
-.wishlist-btn{
-  background:#fff;
-  border:1.5px solid #FED7AA;
-  color:#C2410C;
-  border-radius:20px;
-  padding:8px 16px;
-  font-weight:800;font-size:13px;
-  display:inline-flex;align-items:center;gap:6px;
-  transition:all .15s;
-}
-.wishlist-btn:hover{background:#FFF1E0;transform:scale(1.03)}
-.wishlist-btn.active{background:var(--jh-orange);color:#fff;border-color:var(--jh-orange)}
-.wishlist-btn.active:hover{background:#E6841C}
-.wishlist-list{
-  margin-top:8px;
-  font-size:12.5px;color:var(--text-soft);font-weight:500;
-  width:100%;line-height:1.5;
-}
-.wishlist-list strong{color:var(--text);font-weight:700}
-
-/* Bouton "Supprimer" - rouge discret, dans la modal détail livre + cards podcast/conf */
-.delete-btn{
-  background:#FEF2F2;
-  border:1.5px solid #FECACA;
-  color:#DC2626;
-  border-radius:20px;
-  padding:8px 14px;
-  font-weight:700;font-size:12.5px;
-  display:inline-flex;align-items:center;gap:5px;
-  transition:all .15s;
-}
-.delete-btn:hover{background:#FECACA;color:#B91C1C}
-.delete-btn.icon-only{
-  padding:7px 10px;
-  font-size:14px;
-}
-
-/* ════════════════════════════════════════════════════
-   ZONE RECHERCHE LIVRE & SCANNER (modal ajout livre)
-   ════════════════════════════════════════════════════ */
-.isbn-hero{
-  background:linear-gradient(135deg,#FFF7E6 0%,#FFE9C2 100%);
-  border:1.5px solid var(--jh-orange-light);
-  border-radius:14px;
-  padding:16px 18px;
-  margin-bottom:.5rem;
-}
-.isbn-hero-label{
-  display:flex;align-items:center;gap:8px;
-  font-size:14px;font-weight:800;color:#854D0E;
-  margin-bottom:4px;
-}
-.isbn-hero-sub{
-  font-size:12.5px;color:#854D0E;
-  margin-bottom:12px;line-height:1.5;font-weight:500;
-}
-.isbn-row{
-  display:flex;gap:8px;
-  position:relative;
-}
-.isbn-row input{
-  flex:1;
-  background:#fff;
-  border:1.5px solid #FCD9A5;
-  border-radius:10px;
-  padding:11px 14px;
-  color:var(--text);font-size:14px;font-weight:600;
-  outline:none;width:100%;
-  transition:all .15s;
-}
-.isbn-row input:focus{
-  border-color:var(--jh-orange);
-  box-shadow:0 0 0 3px rgba(252,150,39,.15);
-}
-.isbn-row input::placeholder{color:#C4A57B;font-weight:500}
-.isbn-btn-scan{
-  background:#fff;
-  border:1.5px solid #FCD9A5;
-  border-radius:10px;
-  width:48px;flex-shrink:0;
-  font-size:18px;
-  transition:all .15s;
-  display:flex;align-items:center;justify-content:center;
-}
-.isbn-btn-scan:hover{background:#FFF7E6;border-color:var(--jh-orange)}
-.isbn-hint{
-  font-size:11.5px;color:#854D0E;
-  margin-top:10px;line-height:1.5;font-weight:500;opacity:.85;
-}
-.isbn-hint.success{color:#16A34A;font-weight:700;opacity:1}
-.isbn-hint.error{color:#DC2626;font-weight:700;opacity:1}
-
-/* Dropdown des résultats de recherche */
-.search-results{
-  position:absolute;
-  top:calc(100% + 6px);
-  left:0;right:0;
-  background:#fff;
-  border:1.5px solid var(--border);
-  border-radius:12px;
-  box-shadow:0 16px 48px rgba(0,0,0,.15);
-  max-height:380px;overflow-y:auto;
-  z-index:100;
-  padding:6px;
-}
-.search-results.hidden{display:none}
-.search-result-item{
-  display:flex;align-items:center;gap:12px;
-  padding:10px;
-  border-radius:10px;
-  cursor:pointer;
-  transition:background .12s;
-  text-align:left;
-  width:100%;
-}
-.search-result-item:hover,.search-result-item:focus{
-  background:var(--jh-cream);
-  outline:none;
-}
-.search-result-cover{
-  width:42px;height:60px;
-  flex-shrink:0;
-  border-radius:5px;
-  background:#F5F5F5;
-  object-fit:cover;
-  box-shadow:0 2px 8px rgba(0,0,0,.1);
-}
-.search-result-cover-fb{
-  width:42px;height:60px;
-  flex-shrink:0;
-  border-radius:5px;
-  background:linear-gradient(135deg,var(--jh-orange-light),var(--jh-orange));
-  display:flex;align-items:center;justify-content:center;
-  font-size:18px;
-  box-shadow:0 2px 8px rgba(0,0,0,.1);
-}
-.search-result-info{flex:1;min-width:0}
-.search-result-title{
-  font-family:var(--ff-display);
-  font-weight:800;font-size:13.5px;
-  color:var(--text);line-height:1.25;
-  margin-bottom:2px;
-  display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;
-}
-.search-result-title .lang-badge{
-  display:inline-block;font-size:11px;
-  margin-right:4px;
-  vertical-align:middle;
-}
-.search-result-author{
-  font-size:11.5px;color:var(--text-mute);font-weight:500;
-  display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;
-}
-.search-result-year{
-  font-size:11px;color:var(--text-mute);font-weight:600;
-  margin-top:2px;
-}
-.search-loading{
-  padding:20px;text-align:center;
-  color:var(--text-mute);font-size:13px;font-weight:600;
-}
-.search-empty{
-  padding:20px 16px;text-align:center;
-  color:var(--text-mute);font-size:13px;line-height:1.5;font-weight:500;
-}
-.search-empty strong{color:var(--text);font-weight:800;display:block;margin-bottom:4px}
-
-/* Prévisualisation après auto-fill */
-.cover-preview{
-  background:#F0FDF4;
-  border:1.5px solid #BBF7D0;
-  border-radius:14px;
-  padding:14px;
-  display:flex;gap:14px;align-items:center;
-  margin-bottom:.5rem;
-  animation:slideDown .3s ease;
-}
-@keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
-.cover-preview img{
-  width:60px;height:90px;
-  object-fit:cover;
-  border-radius:6px;
-  flex-shrink:0;
-  box-shadow:0 4px 12px rgba(0,0,0,.15);
-  background:#f5f5f5;
-}
-.cover-preview-info{flex:1;min-width:0}
-.cover-preview-title{
-  font-family:var(--ff-display);
-  font-weight:800;font-size:15px;
-  color:var(--text);line-height:1.25;
-  margin-bottom:3px;
-  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
-}
-.cover-preview-author{
-  font-size:12.5px;color:var(--text-mute);font-weight:500;
-  margin-bottom:6px;
-}
-.cover-preview-status{
-  font-size:11.5px;color:#16A34A;font-weight:800;
-  display:inline-flex;align-items:center;gap:4px;
-}
-
-/* Scanner code-barres */
-.scan-frame{
-  position:relative;
-  width:100%;
-  aspect-ratio:4/3;
-  background:#000;
-  border-radius:12px;
-  overflow:hidden;
-  margin-bottom:1rem;
-}
-.scan-frame video{
-  width:100%;height:100%;
-  object-fit:cover;
-}
-.scan-overlay{
-  position:absolute;inset:0;
-  display:flex;align-items:center;justify-content:center;
-  pointer-events:none;
-}
-.scan-overlay::before,.scan-overlay::after{
-  content:'';position:absolute;
-  border:3px solid var(--jh-orange);
-}
-.scan-overlay::before{
-  top:20%;left:10%;right:10%;height:60%;
-  border-radius:12px;
-  box-shadow:0 0 0 9999px rgba(0,0,0,.45);
-}
-.scan-line{
-  position:absolute;
-  left:12%;right:12%;
-  height:2px;
-  background:linear-gradient(90deg,transparent,var(--jh-orange),transparent);
-  animation:scanLine 2s ease-in-out infinite;
-}
-@keyframes scanLine{
-  0%,100%{top:25%}
-  50%{top:75%}
-}
-.scan-status{
-  text-align:center;
-  font-size:13.5px;font-weight:700;
-  color:var(--text);
-  padding:.5rem 0;
-}
-.scan-status.success{color:#16A34A}
-.scan-status.error{color:#DC2626}
-
-/* ════════════════════════════════════════════════════
-   HISTORIQUE DES EMPRUNTS
-   ════════════════════════════════════════════════════ */
-.history-list{
-  background:#FAFAFA;
-  border-radius:12px;
-  padding:6px;
-  max-height:240px;
-  overflow-y:auto;
-}
-.history-item{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:9px 12px;
-  border-radius:8px;
-  font-size:13px;font-weight:600;
-  transition:background .12s;
-  flex-wrap:wrap;
-  gap:8px;
-}
-.history-item:hover{background:#fff}
-.history-item:not(:last-child){
-  border-bottom:1px solid #EEE;
-}
-.history-who{
-  color:var(--text);
-  font-weight:700;
-}
-.history-dates{
-  display:flex;align-items:center;gap:6px;
-  font-size:12px;color:var(--text-mute);
-  font-weight:500;
-}
-.history-date{
-  background:#fff;
-  border:1px solid #E8E8E8;
-  border-radius:6px;
-  padding:2px 8px;
-  white-space:nowrap;
-}
-.history-arrow{color:#bbb;font-weight:800}
-.history-current{
-  background:#FEF2F2;
-  border:1px solid #FECACA;
-  color:#DC2626;
-  border-radius:6px;
-  padding:2px 8px;
-  font-weight:700;
-  white-space:nowrap;
-}
-
-/* ════════════════════════════════════════════════════
-   COMMENTAIRES (partage par la communauté)
-   ════════════════════════════════════════════════════ */
-.comments-list{
-  display:flex;flex-direction:column;gap:10px;
-  margin-bottom:12px;
-}
-.comment-item{
-  background:#FAFAFA;
-  border-left:3px solid var(--jh-orange);
-  border-radius:0 12px 12px 0;
-  padding:12px 14px;
-  position:relative;
-  animation:slideDown .25s ease;
-}
-.comment-head{
-  display:flex;align-items:center;justify-content:space-between;
-  gap:10px;margin-bottom:6px;flex-wrap:wrap;
-}
-.comment-author{
-  font-weight:800;font-size:13px;color:var(--text);
-  display:flex;align-items:center;gap:6px;
-}
-.comment-author::before{
-  content:'💬';font-size:14px;
-}
-.comment-date{
-  font-size:11px;color:var(--text-mute);font-weight:600;
-}
-.comment-text{
-  font-size:13.5px;color:var(--text-soft);
-  line-height:1.55;font-weight:500;
-  white-space:pre-wrap;word-wrap:break-word;
-}
-.comment-delete{
-  background:transparent;border:none;
-  color:var(--text-mute);
-  font-size:13px;
-  cursor:pointer;padding:2px 6px;border-radius:5px;
-  opacity:0;transition:all .15s;
-}
-.comment-item:hover .comment-delete{opacity:.7}
-.comment-delete:hover{background:#FEE;color:#DC2626;opacity:1}
-
-/* Formulaire d'ajout de commentaire */
-.comment-form{
-  background:var(--jh-cream);
-  border:1.5px solid rgba(252,150,39,.25);
-  border-radius:12px;
-  padding:14px;
-  display:flex;flex-direction:column;gap:8px;
-}
-.comment-form-label{
-  font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;
-  color:#854D0E;
-  display:flex;align-items:center;gap:6px;
-}
-.comment-form input,
-.comment-form textarea{
-  background:#fff;
-  border:1.5px solid #FCD9A5;
-  border-radius:8px;
-  padding:9px 12px;
-  font-size:13px;font-weight:500;
-  color:var(--text);outline:none;
-  transition:all .15s;
-}
-.comment-form input::placeholder,
-.comment-form textarea::placeholder{color:#C4A57B;font-weight:500}
-.comment-form input:focus,
-.comment-form textarea:focus{
-  border-color:var(--jh-orange);
-  box-shadow:0 0 0 3px rgba(252,150,39,.12);
-}
-.comment-form textarea{resize:vertical;min-height:60px;line-height:1.5}
-.comment-form-actions{
-  display:flex;justify-content:space-between;align-items:center;gap:10px;
-  flex-wrap:wrap;
-}
-.comment-hint{
-  font-size:11.5px;color:#854D0E;opacity:.8;
-  font-weight:500;flex:1;min-width:120px;
-}
-.comment-submit{
-  background:var(--jh-grad);
-  background-size:200% 100%;
-  color:#fff;
-  border-radius:18px;
-  padding:8px 16px;
-  font-weight:800;font-size:12.5px;
-  transition:all .2s;
-  white-space:nowrap;
-}
-.comment-submit:hover{
-  background-position:100% 0;
-  transform:translateY(-1px);
-}
-.comment-submit:disabled{opacity:.5;cursor:not-allowed;transform:none}
-.comments-empty{
-  text-align:center;
-  padding:14px;
-  color:var(--text-mute);
-  font-size:12.5px;font-style:italic;font-weight:500;
-}
-
-/* Bouton "Ouvrir le lien" pour les podcasts/vidéos */
-.open-link-btn{
-  display:flex;align-items:center;justify-content:center;gap:8px;
-  background:var(--jh-grad);
-  background-size:200% 100%;
-  color:#fff;
-  border-radius:14px;
-  padding:14px 20px;
-  font-weight:800;font-size:15px;
-  text-decoration:none;
-  transition:all .25s;
-  box-shadow:0 4px 14px rgba(252,150,39,.25);
-  width:100%;
-}
-.open-link-btn:hover{
-  background-position:100% 0;
-  transform:translateY(-1px);
-  box-shadow:0 6px 18px rgba(252,150,39,.35);
-}
-
-/* Pour que la grosse icône au centre ne déborde pas */
-.dcover{position:relative;overflow:hidden}
-
-/* Petit indicateur wishlist sur les cartes livres */
-.wishlist-pill{
-  position:absolute;bottom:12px;left:12px;
-  background:rgba(255,255,255,.95);
-  backdrop-filter:blur(8px);
-  border-radius:14px;
-  padding:3px 9px;
-  font-size:11px;font-weight:800;
-  color:#C2410C;
-  display:flex;align-items:center;gap:3px;
-  box-shadow:0 2px 8px rgba(0,0,0,.1);
-}
-
-/* ════════════════════════════════════════════════════
-   UPLOAD DE COUVERTURE MANUELLE (quand l'auto échoue)
-   ════════════════════════════════════════════════════ */
-
-/* Bouton dans la modal d'ajout (sous la zone ISBN) */
-.cover-upload-btn{
-  display:flex;align-items:center;justify-content:center;gap:8px;
-  width:100%;
-  background:#fff;
-  border:1.5px dashed #C4A57B;
-  border-radius:10px;
-  padding:11px 14px;
-  font-weight:700;font-size:13px;
-  color:#854D0E;
-  cursor:pointer;
-  transition:all .15s;
-  margin-top:10px;
-}
-.cover-upload-btn:hover{
-  background:#FFF7E6;
-  border-color:var(--jh-orange);
-  border-style:solid;
-}
-.cover-upload-btn.has-image{
-  background:#F0FDF4;
-  border-color:#86EFAC;
-  border-style:solid;
-  color:#166534;
-}
-.cover-upload-input{
-  display:none;
-}
-.cover-upload-info{
-  font-size:11.5px;color:var(--text-mute);
-  margin-top:6px;line-height:1.4;font-weight:500;
-  text-align:center;
-}
-
-/* Bouton dans la fiche détail (zone meta) */
-.cover-edit-btn{
-  background:#FFF7E6;
-  border:1.5px solid #FCD9A5;
-  color:#854D0E;
-  border-radius:20px;
-  padding:8px 14px;
-  font-weight:700;font-size:13px;
-  display:inline-flex;align-items:center;gap:5px;
-  cursor:pointer;
-  transition:all .15s;
-}
-.cover-edit-btn:hover{
-  background:#FFE9C2;
-  transform:scale(1.04);
-}
-
-/* Modal "Modifier la couverture" */
-.cover-modal-preview{
-  display:flex;justify-content:center;align-items:center;
-  min-height:240px;
-  background:#FAFAFA;
-  border:1.5px dashed var(--border);
-  border-radius:14px;
-  padding:14px;
-  margin-bottom:1rem;
-}
-.cover-modal-preview img{
-  max-height:300px;max-width:100%;
-  border-radius:8px;
-  box-shadow:0 6px 20px rgba(0,0,0,.15);
-}
-.cover-modal-preview .cover-empty{
-  text-align:center;color:var(--text-mute);
-  font-size:13px;font-weight:500;
-}
-.cover-modal-preview .cover-empty .ico{font-size:42px;margin-bottom:8px;opacity:.5}
-
-/* Toast */
-#toast{
-  position:fixed;bottom:1.5rem;left:50%;
-  transform:translateX(-50%) translateY(100px);
-  background:var(--jh-dark);color:#fff;
-  border-radius:14px;
-  padding:14px 22px;
-  font-size:14px;font-weight:600;
-  z-index:500;
-  box-shadow:0 12px 40px rgba(0,0,0,.25);
-  transition:transform .35s cubic-bezier(.2,.7,.3,1),opacity .35s;
-  opacity:0;max-width:90vw;
-}
-#toast.show{transform:translateX(-50%) translateY(0);opacity:1}
-
-/* ════════════════════════════════════════════════════
-   RESPONSIVE
-   ════════════════════════════════════════════════════ */
-@media (max-width:980px){
-  #hdr-nav{display:none}
-}
-@media (max-width:760px){
-  #sidebar{display:none}
-  #main{padding:1rem 1rem 3rem;gap:0}
-  #content{padding-top:1rem}
-  #grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:1rem}
-  #hdr{padding:0 1rem;height:72px;gap:.75rem}
-  .logo-jh{width:46px;height:46px}
-  .logo-text{display:none}
-  .hdr-search{margin:0;max-width:none}
-  .btn-add{padding:9px 16px;font-size:13px}
-  #hero{padding:3rem 1.25rem 3.5rem}
-  #cats-section{padding:2.5rem 1rem 1rem}
-  #tabs-section{padding:1.5rem 1rem 0}
-  #values-section{padding:0 1rem;margin:2rem auto 3rem}
-  .mhdr,.mbody,.mftr{padding-left:1.25rem;padding-right:1.25rem}
-}
-@media (max-width:480px){
-  #grid{grid-template-columns:repeat(2,1fr);gap:.75rem}
-  .bcard{height:360px}
-  .bcard-cover{height:160px}
-  .bcard-body{padding:10px 12px 12px}
-  .bcard-title{font-size:13px}
-  .bcard-sum{-webkit-line-clamp:2;font-size:11.5px}
-  .icard{padding:1rem;gap:.85rem;flex-wrap:wrap}
-  .iico{width:48px;height:48px;font-size:20px}
-}
-</style>
-</head>
-<body>
-
-<!-- ═══════════════════════════════════════════════════════════════════
-     HEADER
-     ═══════════════════════════════════════════════════════════════════ -->
-<header id="hdr">
-  <a href="#" onclick="setTab('books');return false" class="logo-jh" aria-label="Jhood — retour à l'accueil"></a>
-  <div class="logo-text">
-    Bibliothèque Jhood<span class="dot">.</span>
-  </div>
-
-  <nav id="hdr-nav">
-    <a class="nav-link active" href="#">Bibliothèque</a>
-    <a class="nav-link" href="#" onclick="setTab('books');return false">À lire</a>
-    <a class="nav-link" href="#" onclick="setTab('pods');return false">À écouter</a>
-    <a class="nav-link" href="#" onclick="setTab('confs');return false">À voir</a>
-  </nav>
-
-  <div class="hdr-search">
-    <span class="hdr-search-ico">🔍</span>
-    <input id="search" placeholder="Un titre, un auteur, un sujet…" oninput="render()">
-  </div>
-
-  <div class="hdr-actions">
-    <div class="add-wrap" id="add-wrap">
-      <button class="btn-add" onclick="toggleAdd()">+ Partager</button>
-      <div class="add-drop" id="add-drop">
-        <button class="add-item" onclick="openMod('m-book')">
-          <span class="ai bk">📚</span>
-          <span class="add-item-text">Un livre<small>À déposer à l'atelier</small></span>
-        </button>
-        <button class="add-item" onclick="openMod('m-pod')">
-          <span class="ai pd">🎧</span>
-          <span class="add-item-text">Un podcast<small>Un épisode qui réveille</small></span>
-        </button>
-        <button class="add-item" onclick="openMod('m-conf')">
-          <span class="ai cf">🎤</span>
-          <span class="add-item-text">Une vidéo<small>Conf, vidéo, émission… qui inspire</small></span>
-        </button>
-      </div>
-    </div>
-  </div>
-</header>
-
-<!-- ═══════════════════════════════════════════════════════════════════
-     HERO — gradient signature Jhood, style "CHERCHEZ. TROUVEZ. JHOODEZ!"
-     ═══════════════════════════════════════════════════════════════════ -->
-<section id="hero">
-  <div class="hero-eyebrow" id="hero-eyebrow">Bien plus qu'une bibliothèque</div>
-  <h1 class="hero-title" id="hero-title">CHERCHEZ. LISEZ.<br><span class="accent">JHOODEZ<span class="dot-accent">!</span></span></h1>
-  <p class="hero-sub">Une bibliothèque vivante, partagée par toute la communauté des Jhooders.</p>
-</section>
-
-<!-- ═══════════════════════════════════════════════════════════════════
-     SECTION CARTES COLORÉES (style "Tous secteurs / BTP / Tertiaire")
-     ═══════════════════════════════════════════════════════════════════ -->
-<section id="cats-section">
-  <h2 class="cats-title">LA BIBLIOTHÈQUE JHOOD<span style="color:var(--jh-orange-light)"> ?</span></h2>
-  <p class="cats-sub">
-    <strong>Une bibliothèque qui appartient à toute la communauté.</strong> Livres à emprunter, podcasts à écouter, conférences à regarder — tout ce qui nous fait grandir, on se le partage, et chacun peut en ajouter. Du développement personnel au management, en passant par la philosophie et la communication.
-  </p>
-
-  <div class="cats-grid">
-    <div class="cat-card yellow" onclick="setTab('books')">
-      <div class="cat-card-title">À lire</div>
-      <div class="cat-card-sub">Des livres à emprunter à l'atelier du siège (R+2). À lire, à repartager.</div>
-      <div class="cat-card-arrow">»</div>
-    </div>
-    <div class="cat-card orange" onclick="setTab('pods')">
-      <div class="cat-card-title">À écouter</div>
-      <div class="cat-card-sub">Des podcasts partout. Les épisodes qui font cogiter, partagés par les Jhooders.</div>
-      <div class="cat-card-arrow">»</div>
-    </div>
-    <div class="cat-card teal" onclick="setTab('confs')">
-      <div class="cat-card-title">À voir</div>
-      <div class="cat-card-sub">Conférences, vidéos, émissions… toutes les vidéos qui ouvrent les yeux et donnent envie d'aller plus loin.</div>
-      <div class="cat-card-arrow">»</div>
-    </div>
-  </div>
-</section>
-
-<!-- ═══════════════════════════════════════════════════════════════════
-     ONGLETS + GRILLE
-     ═══════════════════════════════════════════════════════════════════ -->
-<section id="tabs-section">
-  <div class="tabs-bar">
-    <button class="tab on" id="tab-books" onclick="setTab('books')">📚 À lire <span class="tc" id="tc-books">0</span></button>
-    <button class="tab" id="tab-pods" onclick="setTab('pods')">🎧 À écouter <span class="tc" id="tc-pods">0</span></button>
-    <button class="tab" id="tab-confs" onclick="setTab('confs')">🎤 À voir <span class="tc" id="tc-confs">0</span></button>
-    <div class="tabs-right">
-      <button class="btn-share hidden" id="btn-quick-share" onclick="openInspQuick()">+ Partager</button>
-    </div>
-  </div>
-</section>
-
-<main id="main">
-  <aside id="sidebar">
-    <div class="sb-block" id="sb-state-block">
-      <div class="sb-label">État</div>
-      <div class="sb-item on" data-f="all" onclick="setStatus(null,this)">
-        <span class="sbn">📖 Tous les livres</span>
-        <span class="sb-cnt" id="cnt-all">0</span>
-      </div>
-      <div class="sb-item" data-f="av" onclick="setStatus('avail',this)">
-        <span class="sbn">✅ Disponibles</span>
-        <span class="sb-cnt" id="cnt-av">0</span>
-      </div>
-      <div class="sb-item" data-f="em" onclick="setStatus('taken',this)">
-        <span class="sbn">📕 Empruntés</span>
-        <span class="sb-cnt" id="cnt-em">0</span>
-      </div>
-    </div>
-    <div class="sb-block">
-      <div class="sb-label">Catégories</div>
-      <div class="sb-item" data-f="all" onclick="setCat(null,this)">
-        <span class="sbn">🌐 Toutes</span>
-      </div>
-      <div id="cat-nav"></div>
-    </div>
-  </aside>
-
-  <div id="content">
-    <div class="content-bar">
-      <div class="content-count" id="content-count">0 livre</div>
-    </div>
-    <div id="grid"></div>
-    <div id="ilist"></div>
-  </div>
-</main>
-
-<!-- ═══════════════════════════════════════════════════════════════════
-     SECTION VALEURS — façon "DONNER DU SENS" du site
-     ═══════════════════════════════════════════════════════════════════ -->
-<section id="values-section">
-  <div class="values-side">
-    <div class="values-side-text">PARTAGER POUR GRANDIR</div>
-  </div>
-  <div class="values-card">
-    <div class="values-eyebrow">Notre bibliothèque, c'est…</div>
-    <div class="values-list">
-      <div class="value">
-        <div class="value-name">LIRE.</div>
-        <div class="value-desc">Parce que chaque livre lu nourrit nos idées et nos métiers.</div>
-      </div>
-      <div class="value">
-        <div class="value-name">ÉCOUTER.</div>
-        <div class="value-desc">Parce qu'un podcast en trajet ouvre des horizons.</div>
-      </div>
-      <div class="value">
-        <div class="value-name">PARTAGER.</div>
-        <div class="value-desc">Parce que ce qui nous transforme doit circuler.</div>
-      </div>
-      <div class="value">
-        <div class="value-name">GRANDIR.</div>
-        <div class="value-desc">Ensemble — c'est tout l'esprit Jhood.</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ═══════════════════════════════════════════════════════════════════
-     FOOTER
-     ═══════════════════════════════════════════════════════════════════ -->
-<footer id="footer">
-  <div class="footer-logo" aria-label="Jhood"></div>
-  <div class="footer-name">Bibliothèque Jhood<span class="dot">.</span></div>
-  <div class="footer-tag">Lire. Écouter. Partager.</div>
-  <div class="footer-credit">Bibliothèque collective des Jhooders · Construite avec ❤️ pour la communauté</div>
-</footer>
-
-<!-- ═══════════════════════════════════════════════════════════════════
-     MODALS
-     ═══════════════════════════════════════════════════════════════════ -->
-
-<div class="ov" id="m-book">
-  <div class="modal" style="max-width:640px">
-    <div class="mhdr">
-      <div>
-        <div class="mtitle">📚 Ajouter un livre</div>
-        <div class="msub">Pensez à le déposer à l'atelier du siège (R+2) après l'avoir ajouté ici.</div>
-      </div>
-      <button class="xbtn" onclick="closeMod('m-book')">×</button>
-    </div>
-    <div class="mbody">
-
-      <!-- Zone recherche par titre (la plus visible) -->
-      <div class="isbn-hero">
-        <div class="isbn-hero-label">
-          <span style="font-size:18px">⚡</span>
-          <strong>Recherchez votre livre</strong>
-        </div>
-        <div class="isbn-hero-sub">Tapez le titre, l'auteur ou l'ISBN — on cherche pour vous et on remplit tout automatiquement</div>
-        <div class="isbn-row">
-          <input id="b-search" placeholder="Ex : Heureux comme un Danois, ou Atomic Habits…" autocomplete="off"
-                 oninput="onBookSearchInput()" onfocus="onBookSearchInput()" onkeydown="onBookSearchKey(event)">
-          <button class="isbn-btn-scan" onclick="startScan()" title="Scanner le code-barres avec la caméra">📷</button>
-          <div class="search-results hidden" id="search-results"></div>
-        </div>
-        <div class="isbn-hint" id="isbn-hint">💡 Astuce : tapez quelques mots du titre, choisissez dans la liste, et tout se remplit !</div>
-      </div>
-
-      <!-- Prévisualisation de la couverture (apparaît après auto-fill) -->
-      <div class="cover-preview" id="cover-preview" style="display:none">
-        <img id="cover-preview-img" alt="Couverture">
-        <div class="cover-preview-info">
-          <div class="cover-preview-title" id="cover-preview-title"></div>
-          <div class="cover-preview-author" id="cover-preview-author"></div>
-          <div class="cover-preview-status">✓ Récupéré automatiquement</div>
-        </div>
-      </div>
-
-      <!-- Bouton upload photo manuel (au cas où la couverture ne se trouve pas) -->
-      <label class="cover-upload-btn" id="cover-upload-btn" for="cover-upload-input">
-        <span style="font-size:18px">📷</span>
-        <span id="cover-upload-text">Pas la bonne couverture ? Ajoutez votre photo</span>
-      </label>
-      <input type="file" id="cover-upload-input" class="cover-upload-input" accept="image/*" onchange="handleCoverUpload(event)">
-      <div class="cover-upload-info">💡 Photo prise du livre, scan ou image téléchargée — toutes acceptées</div>
-
-      <!-- Champs cachés pour stocker l'ISBN et l'URL de couverture -->
-      <input type="hidden" id="b-isbn">
-      <input type="hidden" id="b-cover-url">
-
-      <!-- Champs (modifiables après auto-fill) -->
-      <div class="fl"><label>Titre *</label><input id="b-ti" placeholder="Ex : Atomic Habits"></div>
-      <div class="fl"><label>Auteur *</label><input id="b-au" placeholder="Ex : James Clear"></div>
-      <div class="fl">
-        <label>Catégorie</label>
-        <select id="b-cat"></select>
-      </div>
-      <div class="fl">
-        <div class="ai-row">
-          <label>Résumé inspirant</label>
-          <button class="ai-btn" id="ai-btn" onclick="genSum()">✨ Générer avec l'IA</button>
-        </div>
-        <textarea id="b-sum" rows="4" placeholder="Cliquez sur ✨ Générer pour un résumé automatique, ou écrivez en 2-3 phrases ce que ce livre vous a apporté…" style="resize:vertical;line-height:1.6"></textarea>
-      </div>
-      <details style="margin-top:.25rem">
-        <summary style="cursor:pointer;font-size:12.5px;font-weight:700;color:var(--text-mute);padding:6px 0">🔑 Clé API Anthropic (optionnel — pour la génération IA)</summary>
-        <div class="api-note" style="margin-top:8px">
-          <input id="b-key" type="password" placeholder="sk-ant-…">
-          <div class="hint">Nécessaire uniquement pour la génération automatique du résumé. Jamais stockée.</div>
-        </div>
-      </details>
-
-    </div>
-    <div class="mftr">
-      <button class="cbtn" onclick="closeMod('m-book')">Annuler</button>
-      <button class="gbtn" onclick="addBook()">Ajouter le livre →</button>
-    </div>
-  </div>
-</div>
-
-<!-- Modal Scanner code-barres -->
-<div class="ov" id="m-scan">
-  <div class="modal" style="max-width:520px">
-    <div class="mhdr">
-      <div>
-        <div class="mtitle">📷 Scanner l'ISBN</div>
-        <div class="msub">Pointez la caméra vers le code-barres au dos du livre</div>
-      </div>
-      <button class="xbtn" onclick="stopScan()">×</button>
-    </div>
-    <div class="mbody">
-      <div class="scan-frame">
-        <video id="scan-video" autoplay muted playsinline></video>
-        <div class="scan-overlay">
-          <div class="scan-line"></div>
-        </div>
-      </div>
-      <div class="scan-status" id="scan-status">📷 Activation de la caméra…</div>
-      <p style="font-size:12.5px;color:var(--text-mute);text-align:center;line-height:1.5;font-weight:500;margin-top:.5rem">
-        Si la caméra ne fonctionne pas, vous pouvez toujours saisir l'ISBN à la main.
-      </p>
-    </div>
-    <div class="mftr">
-      <button class="cbtn" onclick="stopScan()">Annuler</button>
-    </div>
-  </div>
-</div>
-
-<div class="ov" id="m-pod">
-  <div class="modal">
-    <div class="mhdr">
-      <div><div class="mtitle">🎧 Partager un podcast</div><div class="msub">Un épisode qui vous a marqué et que la communauté doit écouter</div></div>
-      <button class="xbtn" onclick="closeMod('m-pod')">×</button>
-    </div>
-    <div class="mbody">
-      <div class="fl"><label>Titre / Épisode *</label><input id="p-ti" placeholder="Ex : Huberman Lab — Les secrets du sommeil"></div>
-      <div class="fl"><label>Créateur</label><input id="p-cr" placeholder="Ex : Andrew Huberman"></div>
-      <div class="fl"><label>Catégorie</label><select id="p-cat"></select></div>
-      <div class="fl"><label>Lien *</label><input id="p-url" type="url" placeholder="https://…"></div>
-      <div class="fl">
-        <label>Pourquoi vous le recommandez ?</label>
-        <textarea id="p-desc" rows="3" style="resize:vertical;line-height:1.6" placeholder="Ce qui vous a marqué, ce que vous en avez retenu…"></textarea>
-      </div>
-    </div>
-    <div class="mftr">
-      <button class="cbtn" onclick="closeMod('m-pod')">Annuler</button>
-      <button class="gbtn" onclick="addPod()">Partager 🎧</button>
-    </div>
-  </div>
-</div>
-
-<div class="ov" id="m-conf">
-  <div class="modal">
-    <div class="mhdr">
-      <div><div class="mtitle">🎬 Partager une vidéo</div><div class="msub">Conférence, vidéo YouTube, émission, replay… tout ce qui vous a inspiré et que la communauté gagnerait à voir</div></div>
-      <button class="xbtn" onclick="closeMod('m-conf')">×</button>
-    </div>
-    <div class="mbody">
-      <div class="frow">
-        <div class="fl">
-          <label>Type *</label>
-          <select id="c-type"></select>
-        </div>
-        <div class="fl">
-          <label>Catégorie</label>
-          <select id="c-cat"></select>
-        </div>
-      </div>
-      <div class="fl"><label>Titre *</label><input id="c-ti" placeholder="Ex : Start With Why — Simon Sinek"></div>
-      <div class="fl"><label>Intervenant·e / Animateur·rice</label><input id="c-sp" placeholder="Ex : Simon Sinek"></div>
-      <div class="fl"><label>Lien *</label><input id="c-url" type="url" placeholder="https://…"></div>
-      <div class="fl">
-        <label>Ce qui vous a touché</label>
-        <textarea id="c-desc" rows="3" style="resize:vertical;line-height:1.6" placeholder="Votre ressenti, ce que vous en avez retenu…"></textarea>
-      </div>
-    </div>
-    <div class="mftr">
-      <button class="cbtn" onclick="closeMod('m-conf')">Annuler</button>
-      <button class="gbtn" onclick="addConf()">Partager 🎬</button>
-    </div>
-  </div>
-</div>
-
-<div class="ov" id="m-detail">
-  <div class="modal" style="max-width:620px;position:relative">
-    <button class="xbtn" onclick="closeMod('m-detail')" style="position:absolute;top:14px;right:14px;z-index:10;background:rgba(255,255,255,.92);backdrop-filter:blur(8px)">×</button>
-    <div class="dcover" id="d-cover"></div>
-    <div class="mbody" id="d-body"></div>
-  </div>
-</div>
-
-<div class="ov" id="m-borrow">
-  <div class="modal" style="max-width:440px">
-    <div class="mhdr">
-      <div><div class="mtitle">📖 L'emprunter</div><div class="msub" id="borrow-book-title"></div></div>
-      <button class="xbtn" onclick="closeMod('m-borrow')">×</button>
-    </div>
-    <div class="mbody">
-      <p style="font-size:14px;color:var(--text-soft);line-height:1.6;margin-bottom:.25rem;font-weight:500">
-        Le livre vous attend à l'atelier du siège (R+2). Indiquez votre prénom et agence pour que la communauté sache que vous l'avez 😉
-      </p>
-      <div class="fl">
-        <label>Ton prénom + agence *</label>
-        <input id="borrow-name" placeholder="Ex : Sophie · Agence Paris" onkeydown="if(event.key==='Enter')confirmBorrow()">
-      </div>
-    </div>
-    <div class="mftr">
-      <button class="cbtn" onclick="closeMod('m-borrow')">Annuler</button>
-      <button class="gbtn" onclick="confirmBorrow()">C'est parti ! 📖</button>
-    </div>
-  </div>
-</div>
-
-<div id="toast"></div>
-
-<!-- ═══════════════════════════════════════════════════════════════════
-     SCRIPT
-     ═══════════════════════════════════════════════════════════════════ -->
-<script>
-/* ════════════════════════════════════════════════════════════════════
-   ZONE 2 — CONFIGURATION FACILEMENT MODIFIABLE
-   ════════════════════════════════════════════════════════════════════ */
-const CONFIG = {
-  // Clé de stockage local (changer pour reset toutes les données)
-  storageKey: 'jhood-biblio-v15',
-};
-
-/* ════════════════════════════════════════════════════════════════════
-   ZONE 3 — CATÉGORIES
-   ════════════════════════════════════════════════════════════════════ */
-const CATS = [
-  // ─────────────────────────────────────────────────────────────────
-  // Pour ajouter / modifier / supprimer une catégorie, éditez ce tableau.
-  // Chaque catégorie a : id (unique, sans espaces), label (nom long),
-  //                     short (nom court affiché sur les cartes),
-  //                     icon (emoji), color (hex) et bg (fond clair).
-  // ─────────────────────────────────────────────────────────────────
-  {id:'dev',     label:'Développement personnel', short:'Dev. perso',    icon:'🌱', color:'#FC9627', bg:'#FFF7E6'},
-  {id:'pro',     label:'Entreprise & management', short:'Entreprise',    icon:'🚀', color:'#429DAC', bg:'#EBF7F9'},
-  {id:'humain',  label:'Relations & humain',      short:'Humain',        icon:'💬', color:'#EC4899', bg:'#FDF2F8'},
-  {id:'philo',   label:'Philosophie & sens',      short:'Philosophie',   icon:'✨', color:'#8B5CF6', bg:'#F5F3FF'},
-  {id:'culture', label:'Culture & société',       short:'Culture',       icon:'🎭', color:'#10B981', bg:'#ECFDF5'},
-  {id:'autre',   label:'Autre',                   short:'Autre',         icon:'📌', color:'#043A51', bg:'#E8EEF1'},
+import React, { useMemo, useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Progress } from '@/components/ui/progress';
+import { Bell, Briefcase, Building2, Factory, FileText, Filter, MapPin, Search, TrendingUp, Users, ShieldCheck, Clock3, Newspaper, Sparkles, Download, ExternalLink } from 'lucide-react';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
+import { motion } from 'framer-motion';
+
+const agencies = [
+  'Toutes les agences',
+  'Saint-Étienne',
+  'Lyon',
+  'Roanne',
+  'Firminy',
+  'Montbrison',
+  'Annonay',
+  'Vienne',
+  'Valence',
 ];
-function getcat(id){return CATS.find(c=>c.id===id)||CATS[CATS.length-1]} // fallback = "Autre"
 
-// Types de contenu pour la section "À voir" (conf / vidéo / émission / autre)
-const TYPES_CONF = [
-  {id:'conf', label:'Conférence', icon:'🎤'},
-  {id:'video',label:'Vidéo',      icon:'📹'},
-  {id:'emi',  label:'Émission',   icon:'📺'},
-  {id:'autre',label:'Autre',      icon:'🎬'},
+const sectors = ['Tous les secteurs', 'Industrie', 'BTP', 'Logistique', 'Tertiaire'];
+const scopes = ['Tous', 'Marché & Emploi', 'Marketing & Concurrentielle'];
+
+const trendData = [
+  { mois: 'Jan', signal: 22, alertes: 5 },
+  { mois: 'Fév', signal: 27, alertes: 8 },
+  { mois: 'Mar', signal: 31, alertes: 7 },
+  { mois: 'Avr', signal: 36, alertes: 10 },
+  { mois: 'Mai', signal: 42, alertes: 12 },
+  { mois: 'Juin', signal: 48, alertes: 14 },
 ];
-function getTypeConf(id){return TYPES_CONF.find(t=>t.id===id)||TYPES_CONF[0]}
 
-/* ════════════════════════════════════════════════════════════════════
-   ZONE 4 — DONNÉES DE DÉMO
-   ════════════════════════════════════════════════════════════════════
-   Listes vides : la bibliothèque démarre vierge, prête pour vos contenus.
-   Pour rajouter des exemples plus tard, ajoutez des objets dans ces listes.
-   ════════════════════════════════════════════════════════════════════ */
-const DEMO_BOOKS = [
-  {id:'b1777972028129',ti:'Le rêve de Marc Aurèle — L\'empereur philosophe qui nous aide à vivre',au:'Frédéric Lenoir',cat:'philo',isbn:'9782080422095',coverUrl:'',sum:'Comment l\'un des plus grands empereurs romains a-t-il gardé sa sérénité face aux guerres, trahisons et épidémies ? Frédéric Lenoir nous offre un portrait sensible de Marc Aurèle et nous invite à découvrir le stoïcisme comme art de vivre. Un livre qui aide à traverser les tempêtes du quotidien.',avail:true,by:null,bat:null,from:'Bibliothèque Jhood',at:'05/05/2026',addedAt:1777972028129,wishlist:[],history:[],comments:[],h:0},
-  {id:'b1777972028130',ti:'Les 5 langages de l\'amour',au:'Gary Chapman',cat:'humain',isbn:'9782863144626',coverUrl:'',sum:'Et si on n\'aimait pas tous de la même manière ? Gary Chapman identifie 5 façons d\'exprimer et de recevoir l\'amour : les paroles valorisantes, les moments de qualité, les cadeaux, les services rendus et le toucher physique. Un livre qui transforme les relations, au-delà du couple.',avail:true,by:null,bat:null,from:'Bibliothèque Jhood',at:'05/05/2026',addedAt:1777972028130,wishlist:[],history:[],comments:[],h:0},
-  {id:'b1777972028131',ti:'Qui a piqué mon fromage ?',au:'Spencer Johnson',cat:'dev',isbn:'9782841006816',coverUrl:'',sum:'Une fable simple mais redoutable d\'efficacité. À travers l\'histoire de quatre personnages dans un labyrinthe, Spencer Johnson nous invite à accueillir le changement plutôt que de le subir. Un petit livre qui se lit en une heure et change durablement notre rapport à l\'imprévu.',avail:true,by:null,bat:null,from:'Bibliothèque Jhood',at:'05/05/2026',addedAt:1777972028131,wishlist:[],history:[],comments:[],h:0},
-  {id:'b1777972028132',ti:'Les reflets du monde — En vivre et en travailler',au:'Fabien Toulmé',cat:'culture',isbn:'9782413040651',coverUrl:'',sum:'Fabien Toulmé part à la rencontre de personnes qui ont quitté un job confortable pour vivre de leur passion. À travers ces récits illustrés, il interroge notre rapport au travail, au sens, et à la liberté. Inspirant pour quiconque se demande s\'il est à sa place.',avail:true,by:null,bat:null,from:'Bibliothèque Jhood',at:'05/05/2026',addedAt:1777972028132,wishlist:[],history:[],comments:[],h:0},
-  {id:'b1777972028133',ti:'La boîte à outils de l\'intelligence collective',au:'Béatrice Arnaud, Sylvie Caruso Cahn',cat:'pro',isbn:'9782100791842',coverUrl:'',sum:'Un manuel concret pour faire émerger l\'intelligence du groupe : world café, codéveloppement, forum ouvert, design thinking… Plus de 60 outils prêts à l\'emploi pour animer ateliers, réunions et co-construction. Un indispensable pour tous ceux qui veulent travailler autrement.',avail:true,by:null,bat:null,from:'Bibliothèque Jhood',at:'05/05/2026',addedAt:1777972028133,wishlist:[],history:[],comments:[],h:0},
-  {id:'b1777972028134',ti:'La belle histoire de FAVI — Tome 1 : Nos belles histoires',au:'Jean-François Zobrist',cat:'pro',isbn:'9782954303734',coverUrl:'',sum:'L\'histoire vraie d\'une fonderie picarde devenue mondialement connue pour avoir libéré ses équipes. Jean-François Zobrist raconte avec humour et profondeur comment FAVI a fait confiance à ses opérateurs et révolutionné son management. Un récit qui inspire toutes les entreprises libérées.',avail:true,by:null,bat:null,from:'Bibliothèque Jhood',at:'05/05/2026',addedAt:1777972028134,wishlist:[],history:[],comments:[],h:0},
-  {id:'b1777972028135',ti:'La belle histoire de FAVI — Tome 2',au:'Jean-François Zobrist',cat:'pro',isbn:'9782954303741',coverUrl:'',sum:'Suite des chroniques de Zobrist, entre anecdotes savoureuses et leçons de leadership. Comment fait-on confiance ? Comment fait-on grandir ses équipes ? Comment garde-t-on l\'esprit d\'origine ? Un tome 2 aussi vivant et inspirant que le premier.',avail:true,by:null,bat:null,from:'Bibliothèque Jhood',at:'05/05/2026',addedAt:1777972028135,wishlist:[],history:[],comments:[],h:0},
-  {id:'b1777972028136',ti:'La belle histoire de FAVI — Tome 3',au:'Jean-François Zobrist',cat:'pro',isbn:'9782954303758',coverUrl:'',sum:'Encore plus d\'histoires vécues à FAVI : les expérimentations, les erreurs, les réussites. Zobrist partage sans filtre les coulisses d\'une entreprise qui mise sur l\'humain. Une mine de pratiques concrètes pour tout dirigeant qui veut libérer son organisation.',avail:true,by:null,bat:null,from:'Bibliothèque Jhood',at:'05/05/2026',addedAt:1777972028136,wishlist:[],history:[],comments:[],h:0},
-  {id:'b1777972028137',ti:'La belle histoire de FAVI — Tome 4',au:'Jean-François Zobrist',cat:'pro',isbn:'9782954303765',coverUrl:'',sum:'Le 4ᵉ et dernier tome des chroniques FAVI. Zobrist boucle la boucle, transmet ses convictions, et nous laisse une œuvre complète sur l\'entreprise libérée. À lire absolument pour comprendre que le management de demain s\'invente déjà aujourd\'hui, dans une fonderie de Picardie.',avail:true,by:null,bat:null,from:'Bibliothèque Jhood',at:'05/05/2026',addedAt:1777972028137,wishlist:[],history:[],comments:[],h:0},
-  {id:'b1777972028138',ti:'Sapiens — Une brève histoire de l\'humanité',au:'Yuval Noah Harari',cat:'culture',isbn:'9782226257017',coverUrl:'',sum:'Comment Homo sapiens, simple primate africain, est-il devenu maître de la planète ? Harari raconte 70 000 ans d\'histoire avec une clarté éblouissante : révolution cognitive, agricole, scientifique. Un livre qui change la façon de voir notre espèce et notre place sur Terre.',avail:true,by:null,bat:null,from:'Bibliothèque Jhood',at:'05/05/2026',addedAt:1777972028138,wishlist:[],history:[],comments:[],h:0},
-  {id:'b1777972028139',ti:'Nexus — Une brève histoire des réseaux d\'information',au:'Yuval Noah Harari',cat:'culture',isbn:'9782226493125',coverUrl:'',sum:'De l\'âge de pierre à l\'IA, Harari explore comment l\'information circule et façonne nos sociétés. Un livre vertigineux et nécessaire pour comprendre les enjeux de notre époque, où les algorithmes deviennent les nouveaux gardiens de la vérité.',avail:true,by:null,bat:null,from:'Bibliothèque Jhood',at:'05/05/2026',addedAt:1777972028139,wishlist:[],history:[],comments:[],h:0},
-  {id:'b1777972028140',ti:'Homo Deus — Une brève histoire de l\'avenir',au:'Yuval Noah Harari',cat:'culture',isbn:'9782226393876',coverUrl:'',sum:'Si Sapiens raconte d\'où nous venons, Homo Deus interroge où nous allons. Bio-ingénierie, IA, données massives : Harari dessine les futurs possibles d\'une humanité qui pourrait devenir divine… ou devenir obsolète. Glaçant et fascinant.',avail:true,by:null,bat:null,from:'Bibliothèque Jhood',at:'05/05/2026',addedAt:1777972028140,wishlist:[],history:[],comments:[],h:0},
-  {id:'b1777972028141',ti:'21 leçons pour le XXIe siècle',au:'Yuval Noah Harari',cat:'culture',isbn:'9782226436931',coverUrl:'',sum:'Travail, religion, immigration, terrorisme, fake news… Harari prend 21 grands sujets contemporains et les éclaire avec sa hauteur de vue habituelle. Un livre boussole pour s\'orienter dans le brouillard de l\'actualité et garder l\'esprit clair.',avail:true,by:null,bat:null,from:'Bibliothèque Jhood',at:'05/05/2026',addedAt:1777972028141,wishlist:[],history:[],comments:[],h:0},
-  {id:'b1777972028142',ti:'Gamestorming — Jouer pour innover',au:'Dave Gray, Sunni Brown, James Macanufo',cat:'pro',isbn:'9782354561314',coverUrl:'',sum:'Plus de 80 jeux et exercices pour booster la créativité collective. Innovation, résolution de problèmes, vision partagée : Gray transforme les réunions en expériences ludiques et productives. La référence pour tout facilitateur ou animateur de workshop.',avail:true,by:null,bat:null,from:'Bibliothèque Jhood',at:'05/05/2026',addedAt:1777972028142,wishlist:[],history:[],comments:[],h:0},
-  {id:'b1777972028143',ti:'Le jour où je me suis aimé pour de vrai',au:'Serge Marquis',cat:'dev',isbn:'9782266279123',coverUrl:'',sum:'Et si l\'estime de soi n\'était pas une affaire de performance, mais de bienveillance envers soi-même ? Le médecin Serge Marquis raconte avec humour et profondeur comment on apprend à s\'aimer. Un livre qui fait du bien et qu\'on relit régulièrement.',avail:true,by:null,bat:null,from:'Bibliothèque Jhood',at:'05/05/2026',addedAt:1777972028143,wishlist:[],history:[],comments:[],h:0},
-  {id:'b1777972028144',ti:'Le Petit Prince',au:'Antoine de Saint-Exupéry',cat:'philo',isbn:'9782070612758',coverUrl:'',sum:'Le conte philosophique le plus lu au monde. Sous l\'apparence d\'un livre pour enfants, Saint-Exupéry distille des trésors de sagesse sur l\'amitié, l\'amour, l\'essentiel. À chaque relecture, on y trouve de nouvelles couches. "On ne voit bien qu\'avec le cœur."',avail:true,by:null,bat:null,from:'Bibliothèque Jhood',at:'05/05/2026',addedAt:1777972028144,wishlist:[],history:[],comments:[],h:0},
-  {id:'b1777972028145',ti:'Ta deuxième vie commence quand tu comprends que tu n\'en as qu\'une',au:'Raphaëlle Giordano',cat:'dev',isbn:'9782501101219',coverUrl:'',sum:'Camille a tout pour être heureuse, et pourtant. Sa rencontre avec un "routinologue" va transformer sa vie. Roman initiatique drôle et touchant, qui donne envie de bouger les lignes de sa propre existence. À lire quand on sent qu\'il est temps de réinventer quelque chose.',avail:true,by:null,bat:null,from:'Bibliothèque Jhood',at:'05/05/2026',addedAt:1777972028145,wishlist:[],history:[],comments:[],h:0},
-  {id:'b1777972028146',ti:'L\'Étranger',au:'Albert Camus',cat:'philo',isbn:'9782070360024',coverUrl:'',sum:'Meursault tue un homme sur une plage d\'Alger. Mais ce n\'est pas son crime qu\'on lui reproche, c\'est son indifférence au monde. Camus livre un chef-d\'œuvre sur l\'absurde, la liberté et la condition humaine. Court, percutant, indispensable.',avail:true,by:null,bat:null,from:'Bibliothèque Jhood',at:'05/05/2026',addedAt:1777972028146,wishlist:[],history:[],comments:[],h:0},
-  {id:'b1777972028147',ti:'La Peste',au:'Albert Camus',cat:'philo',isbn:'9782070360420',coverUrl:'',sum:'À Oran, la peste s\'installe. Le docteur Rieux et ses compagnons résistent. Camus raconte l\'absurde, la solidarité, la dignité face au mal. Un roman d\'une actualité brûlante, qui interroge ce qui nous tient debout quand tout s\'effondre.',avail:true,by:null,bat:null,from:'Bibliothèque Jhood',at:'05/05/2026',addedAt:1777972028147,wishlist:[],history:[],comments:[],h:0},
-  {id:'b1777972028148',ti:'L\'homme aux deux cerveaux',au:'Daniel Pink',cat:'dev',isbn:'9782221107324',coverUrl:'',sum:'Pink démontre que l\'avenir appartient aux profils "cerveau droit" : créatifs, empathiques, donneurs de sens. Dans un monde dominé par l\'automatisation, ce sont les compétences humaines qui feront la différence. Un livre stratégique pour repenser sa carrière.',avail:true,by:null,bat:null,from:'Bibliothèque Jhood',at:'05/05/2026',addedAt:1777972028148,wishlist:[],history:[],comments:[],h:0},
-  {id:'b1777972028149',ti:'L\'obstacle est le chemin',au:'Ryan Holiday',cat:'philo',isbn:'9782501130721',coverUrl:'',sum:'S\'inspirant de Marc Aurèle et du stoïcisme, Holiday montre que les obstacles ne sont pas dans le chemin : ils sont le chemin. Perception, action, volonté : trois leviers pour transformer chaque épreuve en tremplin. Un livre qui forge la résilience.',avail:true,by:null,bat:null,from:'Bibliothèque Jhood',at:'05/05/2026',addedAt:1777972028149,wishlist:[],history:[],comments:[],h:0},
-  {id:'b1777972028150',ti:'Vous pouvez être ce que vous voulez être',au:'Paul Arden',cat:'dev',isbn:'9782840014928',coverUrl:'',sum:'Un petit livre format poche, illustré, à lire en 30 minutes. L\'ex-directeur créatif de Saatchi & Saatchi distille des conseils piquants sur l\'ambition, l\'audace, la créativité. Court, percutant, à offrir à ceux qui doutent. "Ne pas viser le possible, viser l\'extraordinaire."',avail:true,by:null,bat:null,from:'Bibliothèque Jhood',at:'05/05/2026',addedAt:1777972028150,wishlist:[],history:[],comments:[],h:0},
-  {id:'b1777972028151',ti:'Demain — Un nouveau monde en marche',au:'Cyril Dion',cat:'culture',isbn:'9782330061678',coverUrl:'',sum:'Le livre du film éponyme. Dion et Mélanie Laurent partent à la rencontre de celles et ceux qui réinventent l\'agriculture, l\'énergie, l\'économie, la démocratie. Pas de catastrophisme, des solutions concrètes. Un livre qui redonne foi en l\'avenir.',avail:true,by:null,bat:null,from:'Bibliothèque Jhood',at:'05/05/2026',addedAt:1777972028151,wishlist:[],history:[],comments:[],h:0},
-  {id:'b1777972028152',ti:'Heureux comme un Danois',au:'Malene Rydahl',cat:'dev',isbn:'9782246810292',coverUrl:'',sum:'Pourquoi les Danois sont-ils si souvent classés peuple le plus heureux au monde ? Malene Rydahl, danoise vivant en France, partage 10 clés culturelles : confiance, équilibre, simplicité, sens du collectif… Inspirant et applicable au quotidien.',avail:true,by:null,bat:null,from:'Bibliothèque Jhood',at:'05/05/2026',addedAt:1777972028152,wishlist:[],history:[],comments:[],h:0},
-  {id:'b1777972028153',ti:'Les quatre accords toltèques',au:'Don Miguel Ruiz',cat:'philo',isbn:'9782883535619',coverUrl:'',sum:'Quatre principes simples, hérités de la sagesse toltèque : que ta parole soit impeccable. N\'en fais pas une affaire personnelle. Ne fais pas de suppositions. Fais toujours de ton mieux. Quatre accords qui peuvent transformer une vie. À lire et relire.',avail:true,by:null,bat:null,from:'Bibliothèque Jhood',at:'05/05/2026',addedAt:1777972028153,wishlist:[],history:[],comments:[],h:0},
-  {id:'b1777972028154',ti:'Le paradoxe du poisson rouge',au:'Hesna Cailliau',cat:'philo',isbn:'2376060451',coverUrl:'',sum:'Le poisson rouge, dans son bocal, n\'a aucune mémoire mais une grande sagesse : il vit pleinement l\'instant. Hesna Cailliau confronte philosophies orientale et occidentale et nous invite à ralentir, accueillir, lâcher prise. Un livre apaisant et profond.',avail:true,by:null,bat:null,from:'Bibliothèque Jhood',at:'05/05/2026',addedAt:1777972028154,wishlist:[],history:[],comments:[],h:0},
-  {id:'b1777972028155',ti:'Les 50 règles de la communication non violente',au:'Aurore Aimelet',cat:'humain',isbn:'9782501133609',coverUrl:'',sum:'L\'essentiel de la CNV de Marshall Rosenberg en 50 règles concrètes : observer sans juger, exprimer ses émotions, identifier ses besoins, formuler une demande claire. Un format pratique pour transformer ses relations au quotidien — au boulot comme à la maison.',avail:true,by:null,bat:null,from:'Bibliothèque Jhood',at:'05/05/2026',addedAt:1777972028155,wishlist:[],history:[],comments:[],h:0},
-  {id:'b1777972028156',ti:'La rencontre — Une philosophie',au:'Charles Pépin',cat:'philo',isbn:'9782226450005',coverUrl:'',sum:'Et si les rencontres étaient ce qui nous fait vraiment grandir ? Charles Pépin explore avec finesse comment l\'autre nous révèle à nous-même. Convoquant Sartre, Beauvoir, Romain Gary… il célèbre l\'art de la rencontre comme moteur d\'existence.',avail:true,by:null,bat:null,from:'Bibliothèque Jhood',at:'05/05/2026',addedAt:1777972028156,wishlist:[],history:[],comments:[],h:0},
-  {id:'b1777972028157',ti:'La vérité sur ce qui nous motive',au:'Daniel Pink',cat:'pro',isbn:'9782081226302',coverUrl:'',sum:'La carotte et le bâton ne fonctionnent plus. Pink démontre, études à l\'appui, que ce qui nous motive vraiment au travail c\'est l\'autonomie, la maîtrise et le sens. Un livre qui devrait être obligatoire pour tout manager qui veut engager durablement ses équipes.',avail:true,by:null,bat:null,from:'Bibliothèque Jhood',at:'05/05/2026',addedAt:1777972028157,wishlist:[],history:[],comments:[],h:0},
-  {id:'b1777972028158',ti:'Liberté & Cie — Quand la liberté des salariés fait le bonheur des entreprises',au:'Isaac Getz, Brian M. Carney',cat:'pro',isbn:'9782081333468',coverUrl:'',sum:'Le livre fondateur sur les entreprises libérées. Getz et Carney parcourent le monde à la rencontre de ces organisations qui ont supprimé hiérarchie pyramidale, contrôle et reporting au profit de la confiance et de l\'autonomie. Inspirant et documenté.',avail:true,by:null,bat:null,from:'Bibliothèque Jhood',at:'05/05/2026',addedAt:1777972028158,wishlist:[],history:[],comments:[],h:0},
-  {id:'b1777972028159',ti:'La liberté, ça marche !',au:'Isaac Getz',cat:'pro',isbn:'9782081390973',coverUrl:'',sum:'Suite et application concrète de Liberté & Cie. Getz partage le mode opératoire de la libération d\'entreprise : par où commencer, quels écueils, comment durer. Un guide pratique pour les dirigeants qui veulent passer à l\'acte.',avail:true,by:null,bat:null,from:'Bibliothèque Jhood',at:'05/05/2026',addedAt:1777972028159,wishlist:[],history:[],comments:[],h:0},
-  {id:'b1777972028160',ti:'Le patron qui ne voulait plus être chef',au:'Alexandre Gérard, Bertrand Jouvenot',cat:'pro',isbn:'9782081440104',coverUrl:'',sum:'Récit autobiographique d\'Alexandre Gérard, dirigeant de Chronoflex, qui a tout réinventé dans son entreprise : disparition des managers, autonomie radicale, élections internes. Un témoignage sincère sur la libération vue de l\'intérieur, avec ses victoires et ses doutes.',avail:true,by:null,bat:null,from:'Bibliothèque Jhood',at:'05/05/2026',addedAt:1777972028160,wishlist:[],history:[],comments:[],h:0},
-  {id:'b1777972028161',ti:'L\'entreprise du bonheur',au:'Tony Hsieh',cat:'pro',isbn:'9782840016885',coverUrl:'',sum:'Tony Hsieh, fondateur de Zappos, raconte comment il a bâti une entreprise où la culture passe avant le business. Service client légendaire, valeurs vécues au quotidien, recrutement basé sur la culture : un modèle qui a inspiré une génération d\'entrepreneurs.',avail:true,by:null,bat:null,from:'Bibliothèque Jhood',at:'05/05/2026',addedAt:1777972028161,wishlist:[],history:[],comments:[],h:0},
-  {id:'b1777972028162',ti:'La Bible du team building',au:'Arnaud Tonnelé',cat:'pro',isbn:'9782212556971',coverUrl:'',sum:'55 séquences clé en main pour fédérer une équipe : icebreakers, jeux collaboratifs, sessions de cohésion, rituels d\'équipe. Tonnelé partage des outils éprouvés en consulting. Indispensable pour tout manager ou facilitateur qui anime un collectif.',avail:true,by:null,bat:null,from:'Bibliothèque Jhood',at:'05/05/2026',addedAt:1777972028162,wishlist:[],history:[],comments:[],h:0},
-  {id:'b1777972028163',ti:'Les employés d\'abord, les clients ensuite',au:'Vineet Nayar',cat:'pro',isbn:'9782416000478',coverUrl:'',sum:'Vineet Nayar, ex-CEO de HCL Technologies, démontre par l\'expérience que mettre les collaborateurs au cœur de la stratégie crée plus de valeur que de mettre le client. Pyramide inversée, transparence radicale, confiance : un manifeste qui bouscule.',avail:true,by:null,bat:null,from:'Bibliothèque Jhood',at:'05/05/2026',addedAt:1777972028163,wishlist:[],history:[],comments:[],h:0},
-  {id:'b1777972028164',ti:'Reinventing Organizations',au:'Frédéric Laloux',cat:'pro',isbn:'9791020904164',coverUrl:'',sum:'Et si le travail pouvait être source de sens plutôt que de contrainte ? Laloux documente une dizaine d\'organisations qui ont tout réinventé : le pouvoir, la culture, les réunions. Un livre fondateur sur les organisations "opales" et l\'avenir du travail.',avail:true,by:null,bat:null,from:'Bibliothèque Jhood',at:'05/05/2026',addedAt:1777972028164,wishlist:[],history:[],comments:[],h:0}
+const sectorData = [
+  { name: 'Industrie', value: 34, color: '#0f766e' },
+  { name: 'BTP', value: 19, color: '#f59e0b' },
+  { name: 'Logistique', value: 24, color: '#2563eb' },
+  { name: 'Tertiaire', value: 23, color: '#7c3aed' },
 ];
-const DEMO_PODS  = [];
-const DEMO_CONFS = [];
 
-/* ════════════════════════════════════════════════════════════════════
-   STATE & STOCKAGE (localStorage)
-   ════════════════════════════════════════════════════════════════════ */
-let books=[], pods=[], confs=[];
-let tab='books', catFilter=null, statusFilter=null;
-let pendingBorrowId=null, detailId=null;
-let coverErr={};
+const articles = [
+  {
+    id: 1,
+    titre: 'Hausse des recrutements annoncés dans la logistique régionale',
+    scope: 'Marché & Emploi',
+    region: 'Saint-Étienne',
+    secteur: 'Logistique',
+    source: 'Presse régionale',
+    fiabilite: 94,
+    tendance: 'Chaude',
+    date: '08/06/2026',
+    resume: 'Plusieurs acteurs logistiques annoncent des ouvertures de postes sur les 6 à 8 prochaines semaines, avec tension sur les caristes et préparateurs.',
+    tags: ['Recrutement', 'Tension', 'Local'],
+  },
+  {
+    id: 2,
+    titre: 'Nouvelles attentes candidats : flexibilité et sens au travail deviennent prioritaires',
+    scope: 'Marketing & Concurrentielle',
+    region: 'Lyon',
+    secteur: 'Tertiaire',
+    source: 'Étude marché',
+    fiabilite: 89,
+    tendance: 'Montante',
+    date: '05/06/2026',
+    resume: 'Les candidats arbitrent davantage sur la souplesse, la transparence salariale et la marque employeur avant de choisir une agence.',
+    tags: ['Candidats', 'RSE', 'Marque'],
+  },
+  {
+    id: 3,
+    titre: 'Concurrence : une agence nationale pousse une offre sectorielle Industrie + formation',
+    scope: 'Marketing & Concurrentielle',
+    region: 'Roanne',
+    secteur: 'Industrie',
+    source: 'Site concurrent',
+    fiabilite: 84,
+    tendance: 'À surveiller',
+    date: '03/06/2026',
+    resume: 'Une campagne visible combine intérim, montée en compétences et promesse de rapidité de placement sur des postes industriels.',
+    tags: ['Concurrence', 'Industrie', 'Offre'],
+  },
+  {
+    id: 4,
+    titre: 'Le BTP local repart sur plusieurs projets structurants',
+    scope: 'Marché & Emploi',
+    region: 'Valence',
+    secteur: 'BTP',
+    source: 'Collectivité / Presse',
+    fiabilite: 92,
+    tendance: 'Chaude',
+    date: '01/06/2026',
+    resume: 'Des investissements publics et privés soutiennent un besoin progressif en chefs d’équipe, maçons qualifiés et conducteurs d’engins.',
+    tags: ['Investissement', 'BTP', 'Territoire'],
+  },
+  {
+    id: 5,
+    titre: 'Cadre RH : multiplication des contenus sur la semaine de 4 jours dans l’industrie',
+    scope: 'Marché & Emploi',
+    region: 'Saint-Étienne',
+    secteur: 'Industrie',
+    source: 'Médias RH',
+    fiabilite: 87,
+    tendance: 'Chaude',
+    date: '30/05/2026',
+    resume: 'Le sujet gagne en visibilité ; les impacts sur l’attractivité et l’organisation des équipes reviennent dans plusieurs publications.',
+    tags: ['RH', 'Temps de travail', 'Industrie'],
+  },
+];
 
-let _mem={};
-function lsGet(k){try{return localStorage.getItem(k)}catch{return _mem[k]||null}}
-function lsSet(k,v){try{localStorage.setItem(k,v)}catch{_mem[k]=v}}
+const actionsMensuelles = [
+  {
+    titre: 'Priorité sourcing caristes',
+    niveau: 'Élevée',
+    detail: 'Renforcer les viviers et pousser une campagne locale ciblée sur la logistique.',
+  },
+  {
+    titre: 'Argumentaire concurrentiel harmonisé',
+    niveau: 'Moyenne',
+    detail: 'Mettre à jour les pitchs agence sur flexibilité, proximité et réactivité.',
+  },
+  {
+    titre: 'Test newsletter locale par agence',
+    niveau: 'Moyenne',
+    detail: 'Partager chaque mois 3 signaux faibles et 3 opportunités business à l’équipe.',
+  },
+];
 
-async function load(){
-  try{
-    const raw=lsGet(CONFIG.storageKey);
-    const d=raw?JSON.parse(raw):null;
-    if(d){books=d.books||DEMO_BOOKS;pods=d.pods||DEMO_PODS;confs=d.confs||DEMO_CONFS}
-    else{books=DEMO_BOOKS;pods=DEMO_PODS;confs=DEMO_CONFS;save()}
-  }catch{books=DEMO_BOOKS;pods=DEMO_PODS;confs=DEMO_CONFS}
-}
-
-async function save(){
-  try{lsSet(CONFIG.storageKey,JSON.stringify({books,pods,confs}))}catch{}
-}
-
-/* ════════════════════════════════════════════════════════════════════
-   INIT
-   ════════════════════════════════════════════════════════════════════ */
-function fillCatSelect(){
-  // Catégories pour livres / podcasts / conférences (mêmes catégories partout)
-  const opts=CATS.map(c=>`<option value="${c.id}">${c.icon} ${c.label}</option>`).join('');
-  const ids=['b-cat','p-cat','c-cat'];
-  ids.forEach(id=>{
-    const sel=document.getElementById(id);
-    if(sel)sel.innerHTML=opts;
-  });
-  // Types pour la section "À voir" uniquement
-  const typeSel=document.getElementById('c-type');
-  if(typeSel){
-    typeSel.innerHTML=TYPES_CONF.map(t=>`<option value="${t.id}">${t.icon} ${t.label}</option>`).join('');
-  }
-}
-
-function setTab(t){
-  tab=t;catFilter=null;statusFilter=null;
-  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
-  const tEl=document.getElementById('tab-'+t);
-  if(tEl)tEl.classList.add('on');
-  const isBk=t==='books';
-  document.getElementById('grid').style.display=isBk?'grid':'none';
-  document.getElementById('ilist').style.display=isBk?'none':'flex';
-  // La sidebar reste visible pour TOUS les onglets (catégories applicables partout)
-  document.getElementById('sidebar').style.display='';
-  // Le bloc "État" (Disponibles/Empruntés) ne concerne que les livres
-  const stateBlock=document.getElementById('sb-state-block');
-  if(stateBlock)stateBlock.style.display=isBk?'':'none';
-  // Le label "État" du sidebar s'adapte
-  document.getElementById('btn-quick-share').classList.toggle('hidden',isBk);
-  document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('on'));
-  const allSb=document.querySelector('.sb-item[data-f="all"]');
-  if(allSb)allSb.classList.add('on');
-  // Scroll vers les onglets si on vient d'une carte cat-card
-  document.getElementById('tabs-section').scrollIntoView({behavior:'smooth',block:'start'});
-  render();
-}
-
-function setStatus(s,el){
-  statusFilter=s;catFilter=null;
-  document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('on'));
-  el.classList.add('on');render();
-}
-function setCat(c,el){
-  catFilter=c;statusFilter=null;
-  document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('on'));
-  el.classList.add('on');render();
-}
-function openInspQuick(){if(tab==='pods')openMod('m-pod');else openMod('m-conf')}
-
-function cover(b){if(b.coverUrl)return b.coverUrl;if(b.isbn)return`https://covers.openlibrary.org/b/isbn/${b.isbn}-M.jpg`;return null}
-function coverL(b){if(b.coverUrl)return b.coverUrl;if(b.isbn)return`https://covers.openlibrary.org/b/isbn/${b.isbn}-L.jpg`;return null}
-
-// Un livre est "nouveau" s'il a été ajouté il y a moins de 30 jours
-function isNew(b){
-  if(!b.addedAt)return false;
-  const days=(Date.now()-b.addedAt)/(1000*60*60*24);
-  return days<=30;
-}
-
-function escapeHtml(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-function escapeAttr(s){return escapeHtml(s).replace(/`/g,'&#96;')}
-
-/* ════════════════════════════════════════════════════════════════════
-   RENDER
-   ════════════════════════════════════════════════════════════════════ */
-function render(){
-  document.getElementById('tc-books').textContent=books.length;
-  document.getElementById('tc-pods').textContent=pods.length;
-  document.getElementById('tc-confs').textContent=confs.length;
-  document.getElementById('cnt-all').textContent=books.length;
-  document.getElementById('cnt-av').textContent=books.filter(b=>b.avail).length;
-  document.getElementById('cnt-em').textContent=books.filter(b=>!b.avail).length;
-
-  const q=document.getElementById('search').value.toLowerCase().trim();
-
-  if(tab==='books'){
-    const catHtml=CATS.map(c=>{
-      const cnt=books.filter(b=>b.cat===c.id).length;
-      return `<div class="sb-item" data-f="cat-${c.id}" onclick="setCat('cat-${c.id}',this)">
-        <span class="sbn"><span class="cat-dot" style="background:${c.color}"></span>${c.label}</span>
-        <span class="sb-cnt">${cnt}</span>
-      </div>`;
-    }).join('');
-    document.getElementById('cat-nav').innerHTML=catHtml;
-
-    let filtered=books.filter(b=>{
-      if(q&&!b.ti.toLowerCase().includes(q)&&!b.au.toLowerCase().includes(q)&&!(b.sum||'').toLowerCase().includes(q))return false;
-      if(statusFilter==='avail')return b.avail;
-      if(statusFilter==='taken')return !b.avail;
-      if(catFilter&&catFilter.startsWith('cat-'))return b.cat===catFilter.replace('cat-','');
-      return true;
-    });
-
-    document.getElementById('content-count').innerHTML=`<em>${filtered.length}</em> livre${filtered.length!==1?'s':''}${q?` pour « ${q} »`:''}`;
-
-    if(!filtered.length){
-      document.getElementById('grid').innerHTML=`
-        <div class="empty" style="grid-column:1/-1">
-          <div class="empty-ico">📚</div>
-          <h3>Aucun livre par ici</h3>
-          <p>Soyez le premier à partager un livre qui vous a transformé !</p>
-          <button class="empty-cta" onclick="openMod('m-book')">+ Ajouter un livre</button>
-        </div>`;
-      return;
-    }
-
-    document.getElementById('grid').innerHTML=filtered.map(b=>{
-      const c=getcat(b.cat);
-      const cv=cover(b);
-      const coverHtml=cv&&!coverErr[b.id]
-        ? `<img src="${cv}" loading="lazy" alt="${escapeHtml(b.ti)}" onerror="coverErr['${b.id}']=true;render()">`
-        : `<div class="bcard-fb" style="background:linear-gradient(135deg,${c.color},${c.color}dd)">
-             <div class="fi">${c.icon}</div>
-             <div class="ft">${escapeHtml(b.ti)}</div>
-             <div class="fa">${escapeHtml(b.au)}</div>
-           </div>`;
-      return `<div class="bcard" onclick="openDetail('${b.id}')">
-        <div class="bcard-cover" style="background:${c.bg}">
-          ${coverHtml}
-          ${isNew(b)?'<div class="new-tag">✨ Nouveau</div>':''}
-          <div class="avail-tag ${b.avail?'av-yes':'av-no'}">${b.avail?'DISPO':'EMPRUNTÉ'}</div>
-          ${b.wishlist&&b.wishlist.length?`<div class="wishlist-pill">⭐ ${b.wishlist.length}</div>`:''}
-        </div>
-        <div class="bcard-body">
-          <div class="bcard-title">${escapeHtml(b.ti)}</div>
-          <div class="bcard-author">${escapeHtml(b.au)}</div>
-          ${b.sum
-            ?`<div class="bcard-sum">${escapeHtml(b.sum)}</div>`
-            :`<div class="bcard-sum-empty">Cliquez pour découvrir ce livre…</div>`}
-          <div class="bcard-foot">
-            <span class="cat-chip" style="background:${c.color}1a;color:${c.color}">${c.icon} ${c.short}</span>
-            <span style="display:flex;gap:8px;align-items:center">
-              ${(b.comments||[]).length?`<span class="heart-c">💬 ${(b.comments||[]).length}</span>`:''}
-              <span class="heart-c">❤️ ${b.h||0}</span>
-            </span>
+function StatCard({ title, value, icon: Icon, sub, accent = 'bg-teal-600' }) {
+  return (
+    <Card className="rounded-2xl shadow-sm border-slate-200">
+      <CardContent className="p-5">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-sm text-slate-500">{title}</p>
+            <p className="text-3xl font-semibold text-slate-900 mt-1">{value}</p>
+            <p className="text-sm text-slate-500 mt-2">{sub}</p>
+          </div>
+          <div className={`h-11 w-11 rounded-2xl ${accent} text-white flex items-center justify-center`}>
+            <Icon className="h-5 w-5" />
           </div>
         </div>
-      </div>`;
-    }).join('');
+      </CardContent>
+    </Card>
+  );
+}
 
-  } else {
-    const list=tab==='pods'?pods:confs;
-    const klass=tab==='pods'?'pod':'conf';
-    const labelSing=tab==='pods'?'podcast':'contenu';
-    const labelPlur=tab==='pods'?'podcasts':'contenus';
+function TrendBadge({ value }) {
+  const map = {
+    'Chaude': 'bg-red-100 text-red-700 border-red-200',
+    'Montante': 'bg-amber-100 text-amber-700 border-amber-200',
+    'À surveiller': 'bg-slate-100 text-slate-700 border-slate-200',
+  };
+  return <Badge className={`rounded-full border ${map[value] || 'bg-slate-100 text-slate-700 border-slate-200'}`}>{value}</Badge>;
+}
 
-    // Sidebar : catégories (mêmes que pour les livres) - applicables aussi à pods/confs
-    const catHtml=CATS.map(c=>{
-      const cnt=list.filter(i=>i.cat===c.id).length;
-      return `<div class="sb-item" data-f="cat-${c.id}" onclick="setCat('cat-${c.id}',this)">
-        <span class="sbn"><span class="cat-dot" style="background:${c.color}"></span>${c.label}</span>
-        <span class="sb-cnt">${cnt}</span>
-      </div>`;
-    }).join('');
-    document.getElementById('cat-nav').innerHTML=catHtml;
+export default function Page() {
+  const [agency, setAgency] = useState('Toutes les agences');
+  const [sector, setSector] = useState('Tous les secteurs');
+  const [scope, setScope] = useState('Tous');
+  const [search, setSearch] = useState('');
 
-    // Filtrage : recherche + catégorie
-    const filt=list.filter(i=>{
-      if(q&&!i.ti.toLowerCase().includes(q)&&!(i.cr||i.sp||'').toLowerCase().includes(q)&&!(i.desc||'').toLowerCase().includes(q))return false;
-      if(catFilter&&catFilter.startsWith('cat-'))return i.cat===catFilter.replace('cat-','');
-      return true;
+  const filteredArticles = useMemo(() => {
+    return articles.filter((a) => {
+      const okAgency = agency === 'Toutes les agences' || a.region === agency;
+      const okSector = sector === 'Tous les secteurs' || a.secteur === sector;
+      const okScope = scope === 'Tous' || a.scope === scope;
+      const q = search.trim().toLowerCase();
+      const okSearch = !q || [a.titre, a.resume, a.source, a.region, a.secteur, ...(a.tags || [])].join(' ').toLowerCase().includes(q);
+      return okAgency && okSector && okScope && okSearch;
     });
+  }, [agency, sector, scope, search]);
 
-    document.getElementById('content-count').innerHTML=`<em>${filt.length}</em> ${filt.length>1?labelPlur:labelSing}${q?` pour « ${q} »`:''}`;
+  const hotCount = filteredArticles.filter((a) => a.tendance === 'Chaude').length;
+  const avgFiability = filteredArticles.length ? Math.round(filteredArticles.reduce((acc, a) => acc + a.fiabilite, 0) / filteredArticles.length) : 0;
 
-    if(!filt.length){
-      const emptyMsg=tab==='pods'?"Rien à écouter pour l'instant":"Rien à voir pour l'instant";
-      const emptyIco=tab==='pods'?'🎧':'🎬';
-      document.getElementById('ilist').innerHTML=`
-        <div class="empty">
-          <div class="empty-ico">${emptyIco}</div>
-          <h3>${emptyMsg}</h3>
-          <p>Soyez le premier à partager ce qui vous inspire !</p>
-          <button class="empty-cta" onclick="openInspQuick()">+ Partager</button>
-        </div>`;
-      return;
-    }
-
-    document.getElementById('ilist').innerHTML=filt.map(i=>{
-      const delFn=tab==='pods'?'deletePod':'deleteConf';
-      const c=getcat(i.cat);
-      // Pour les confs : icône selon le type (conf/vidéo/émission/autre)
-      let ico='🎧';
-      let typeBadge='';
-      if(tab==='confs'){
-        const t=getTypeConf(i.type);
-        ico=t.icon;
-        typeBadge=`<span class="type-chip">${t.icon} ${t.label}</span>`;
-      }
-      const catBadge=i.cat?`<span class="cat-chip" style="background:${c.color}1a;color:${c.color}">${c.icon} ${c.short}</span>`:'';
-      const cmtCount=(i.comments||[]).length;
-      const kindArg=tab==='pods'?'pod':'conf';
-      return `<div class="icard" onclick="openItemDetail('${i.id}','${kindArg}')" style="cursor:pointer">
-        <div class="iico ${klass}">${ico}</div>
-        <div class="icard-main">
-          <div class="ititle">${escapeHtml(i.ti)}</div>
-          ${(i.cr||i.sp)?`<div class="icreator">par ${escapeHtml(i.cr||i.sp)}</div>`:''}
-          ${(typeBadge||catBadge)?`<div class="ichips">${typeBadge}${catBadge}</div>`:''}
-          ${i.desc?`<div class="idesc">${escapeHtml(i.desc)}</div>`:''}
-          <div class="imeta">
-            <a href="${escapeAttr(i.url)}" target="_blank" rel="noopener" class="ilink" onclick="event.stopPropagation()">Ouvrir →</a>
-            <span class="ifrom">Partagé par <strong>${escapeHtml(i.from)}</strong> · ${i.at}</span>
-            ${cmtCount?`<span class="cmt-count" title="Commentaires">💬 ${cmtCount}</span>`:''}
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white text-slate-900">
+      <div className="max-w-7xl mx-auto px-4 py-6 md:px-8 md:py-8">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Badge className="rounded-full bg-teal-100 text-teal-800 border border-teal-200">Jude Intelligence Marché</Badge>
+                <Badge className="rounded-full bg-slate-100 text-slate-700 border border-slate-200">MVP partageable</Badge>
+              </div>
+              <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">Plateforme dynamique de veille marché & marketing</h1>
+              <p className="text-slate-600 mt-2 max-w-3xl">Un cockpit simple pour les 8 agences : collecte multi-sources, filtrage IA, synthèses actionnables, signaux chauds et rapport mensuel en 5 minutes de lecture.</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button className="rounded-2xl bg-slate-900 hover:bg-slate-800 gap-2"><Download className="h-4 w-4" /> Export mensuel</Button>
+              <Button variant="outline" className="rounded-2xl gap-2"><Bell className="h-4 w-4" /> Configurer alertes</Button>
+            </div>
           </div>
+        </motion.div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-6">
+          <StatCard title="Actualités qualifiées" value={filteredArticles.length} icon={Newspaper} sub="Après dédoublonnage et filtrage IA" />
+          <StatCard title="Sujets chauds" value={hotCount} icon={TrendingUp} sub="Tendances en accélération" accent="bg-amber-500" />
+          <StatCard title="Fiabilité moyenne" value={`${avgFiability}%`} icon={ShieldCheck} sub="Sources accessibles en 1 clic" accent="bg-emerald-600" />
+          <StatCard title="Temps de lecture" value="< 5 min" icon={Clock3} sub="Vue synthétique pour consultants" accent="bg-violet-600" />
         </div>
-        <div style="display:flex;flex-direction:column;gap:6px;align-items:center;flex-shrink:0" onclick="event.stopPropagation()">
-          <button class="hbtn" onclick="heartI('${i.id}')">
-            <span class="he">❤️</span>
-            <span class="hc">${i.h||0}</span>
-          </button>
-          <button class="delete-btn icon-only" onclick="${delFn}('${i.id}')" title="Supprimer">🗑️</button>
-        </div>
-      </div>`;
-    }).join('');
-  }
-}
 
-/* ════════════════════════════════════════════════════════════════════
-   DÉTAIL LIVRE
-   ════════════════════════════════════════════════════════════════════ */
-function openDetail(id){
-  const b=books.find(x=>x.id===id);if(!b)return;
-  detailId=id;const c=getcat(b.cat);
-  const lc=coverL(b);
+        <Card className="rounded-2xl shadow-sm border-slate-200 mb-6">
+          <CardContent className="p-4 md:p-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+              <div className="xl:col-span-1 relative">
+                <Search className="h-4 w-4 absolute left-3 top-3 text-slate-400" />
+                <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Rechercher un sujet, secteur, source..." className="pl-9 rounded-2xl" />
+              </div>
+              <Select value={agency} onValueChange={setAgency}>
+                <SelectTrigger className="rounded-2xl"><SelectValue placeholder="Agence" /></SelectTrigger>
+                <SelectContent>
+                  {agencies.map((a) => <SelectItem key={a} value={a}>{a}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Select value={sector} onValueChange={setSector}>
+                <SelectTrigger className="rounded-2xl"><SelectValue placeholder="Secteur" /></SelectTrigger>
+                <SelectContent>
+                  {sectors.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Select value={scope} onValueChange={setScope}>
+                <SelectTrigger className="rounded-2xl"><SelectValue placeholder="Périmètre" /></SelectTrigger>
+                <SelectContent>
+                  {scopes.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
 
-  const dcover=document.getElementById('d-cover');
-  dcover.style.background=`linear-gradient(135deg,${c.color}cc 0%,${c.color}66 50%,#043A51 100%)`;
-  dcover.innerHTML='';
-  if(lc&&!coverErr[b.id]){
-    const img=new Image();img.src=lc;img.alt=b.ti;
-    img.onerror=()=>img.remove();
-    dcover.appendChild(img);
-  }
-  const overlay=document.createElement('div');
-  overlay.className='dcover-info';
-  overlay.innerHTML=`
-    <div class="dcat-chip" style="background:rgba(255,255,255,.95);color:${c.color}">${c.icon} ${c.label}</div>
-    <div class="dtitle">${escapeHtml(b.ti)}</div>
-    <div class="dauthor">${escapeHtml(b.au)}</div>`;
-  dcover.appendChild(overlay);
+        <Tabs defaultValue="dashboard" className="space-y-6">
+          <TabsList className="grid grid-cols-1 sm:grid-cols-3 rounded-2xl p-1 h-auto bg-slate-100">
+            <TabsTrigger value="dashboard" className="rounded-2xl">Dashboard</TabsTrigger>
+            <TabsTrigger value="actu" className="rounded-2xl">Veille filtrée</TabsTrigger>
+            <TabsTrigger value="mensuel" className="rounded-2xl">Rendez-vous mensuel</TabsTrigger>
+          </TabsList>
 
-  const borrowZone = b.avail
-    ? `<div class="borrow-box av">
-         <span class="bbi">✅</span>
-         <div class="bbm">
-           <div class="borrow-label" style="color:#16A34A">Disponible</div>
-           <div class="borrow-since">Prêt à être lu !</div>
-         </div>
-         <button class="borrow-btn take" onclick="startBorrow('${id}')">📖 Je l'emprunte</button>
-       </div>`
-    : `<div class="borrow-box em">
-         <span class="bbi">📕</span>
-         <div class="bbm">
-           <div class="borrow-label" style="color:#DC2626">Emprunté par ${escapeHtml(b.by||'')}</div>
-           <div class="borrow-since">Depuis le ${b.bat||'?'}</div>
-         </div>
-         <button class="borrow-btn give" onclick="doReturn('${id}')">↩ Le rendre</button>
-       </div>`;
+          <TabsContent value="dashboard" className="space-y-6">
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+              <Card className="xl:col-span-2 rounded-2xl shadow-sm border-slate-200">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2"><TrendingUp className="h-5 w-5 text-teal-700" /> Évolution des signaux</CardTitle>
+                  <CardDescription>Lecture macro des sujets en montée et du niveau d’alertes.</CardDescription>
+                </CardHeader>
+                <CardContent className="h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={trendData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="mois" />
+                      <YAxis />
+                      <Tooltip />
+                      <Area type="monotone" dataKey="signal" stroke="#0f766e" fill="#99f6e4" />
+                      <Area type="monotone" dataKey="alertes" stroke="#f59e0b" fill="#fde68a" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
 
-  // Zone wishlist : uniquement si le livre est emprunté
-  const wishlist=b.wishlist||[];
-  const wishlistZone = !b.avail
-    ? `<div class="wishlist-box">
-         <span class="wbi">⭐</span>
-         <div class="wbm">
-           <div class="wishlist-label">Réservez votre tour</div>
-           <div class="wishlist-count">${wishlist.length} personne${wishlist.length!==1?'s':''} sur la liste d'attente</div>
-         </div>
-         <button class="wishlist-btn" onclick="toggleWishlist('${id}')">
-           ⭐ Je le veux après !
-         </button>
-         ${wishlist.length?`<div class="wishlist-list">📋 Liste : ${wishlist.map(p=>`<strong>${escapeHtml(p)}</strong>`).join(' → ')}</div>`:''}
-       </div>`
-    : '';
+              <Card className="rounded-2xl shadow-sm border-slate-200">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2"><Factory className="h-5 w-5 text-slate-700" /> Répartition sectorielle</CardTitle>
+                  <CardDescription>Poids des signaux par spécialité Jude.</CardDescription>
+                </CardHeader>
+                <CardContent className="h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie data={sectorData} dataKey="value" nameKey="name" outerRadius={90}>
+                        {sectorData.map((entry) => <Cell key={entry.name} fill={entry.color} />)}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </div>
 
-  // Historique des emprunts (les plus récents en premier)
-  const history=(b.history||[]).slice().reverse();
-  const historyZone = history.length
-    ? `<div style="margin-top:1.25rem">
-         <div class="section-label">📜 Historique des emprunts (${history.length})</div>
-         <div class="history-list">
-           ${history.map(h=>`
-             <div class="history-item">
-               <div class="history-who">${escapeHtml(h.who)}</div>
-               <div class="history-dates">
-                 <span class="history-date">📖 ${h.borrowedAt}</span>
-                 ${h.returnedAt
-                   ?`<span class="history-arrow">→</span><span class="history-date">↩️ ${h.returnedAt}</span>`
-                   :`<span class="history-current">📕 En cours</span>`}
-               </div>
-             </div>
-           `).join('')}
-         </div>
-       </div>`
-    : '';
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+              <Card className="xl:col-span-2 rounded-2xl shadow-sm border-slate-200">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2"><Sparkles className="h-5 w-5 text-violet-700" /> Insights clés du mois</CardTitle>
+                  <CardDescription>Synthèse IA courte, utile, actionnable.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="p-4 rounded-2xl bg-teal-50 border border-teal-100">
+                    <p className="text-sm font-medium text-teal-900 mb-1">1. Recrutement : signal fort en logistique</p>
+                    <p className="text-sm text-slate-700">Le bassin local montre une tension persistante sur les profils d’exécution. Une campagne vivier + cooptation serait pertinente à court terme.</p>
+                  </div>
+                  <div className="p-4 rounded-2xl bg-amber-50 border border-amber-100">
+                    <p className="text-sm font-medium text-amber-900 mb-1">2. Candidats : montée des attentes sur la flexibilité</p>
+                    <p className="text-sm text-slate-700">La rapidité seule ne suffit plus. Le discours agence doit inclure transparence, rythme et lien humain pour convertir davantage.</p>
+                  </div>
+                  <div className="p-4 rounded-2xl bg-violet-50 border border-violet-100">
+                    <p className="text-sm font-medium text-violet-900 mb-1">3. Industrie : la semaine de 4 jours devient un thème chaud</p>
+                    <p className="text-sm text-slate-700">Sujet à suivre pour anticiper les objections clients, nourrir les argumentaires et détecter les besoins d’accompagnement RH.</p>
+                  </div>
+                </CardContent>
+              </Card>
 
-  document.getElementById('d-body').innerHTML=`
-    ${borrowZone}
-    ${wishlistZone}
-    ${b.sum?`<div style="margin-top:1rem">
-      <div class="section-label">À propos de ce livre</div>
-      <div class="sum-block">${escapeHtml(b.sum)}</div>
-    </div>`:''}
-    <div style="margin-top:1.25rem">
-      <div class="section-label">💬 Ce que la communauté en dit (${(b.comments||[]).length})</div>
-      <div id="comments-zone">${renderComments(b,'book')}</div>
+              <Card className="rounded-2xl shadow-sm border-slate-200">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2"><Users className="h-5 w-5 text-slate-700" /> UX terrain</CardTitle>
+                  <CardDescription>Conçu pour être lu vite et partagé simplement.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <div className="flex justify-between text-sm mb-2"><span>Lecture en 5 min</span><span>95%</span></div>
+                    <Progress value={95} />
+                  </div>
+                  <div>
+                    <div className="flex justify-between text-sm mb-2"><span>Sources traçables</span><span>100%</span></div>
+                    <Progress value={100} />
+                  </div>
+                  <div>
+                    <div className="flex justify-between text-sm mb-2"><span>Évolutivité mots-clés / sources</span><span>90%</span></div>
+                    <Progress value={90} />
+                  </div>
+                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-sm text-slate-700">
+                    <p className="font-medium mb-1">Principe RGPD / conformité</p>
+                    <p>On privilégie RSS, open data, sources publiques, et des connecteurs configurables. Les liens d’origine restent visibles, et l’utilisateur peut remonter à la source.</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="actu" className="space-y-4">
+            {filteredArticles.map((item) => (
+              <motion.div key={item.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+                <Card className="rounded-2xl shadow-sm border-slate-200">
+                  <CardContent className="p-5">
+                    <div className="flex flex-col xl:flex-row gap-4 xl:items-start xl:justify-between">
+                      <div className="space-y-3 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge className="rounded-full bg-slate-100 text-slate-800 border border-slate-200">{item.scope}</Badge>
+                          <Badge className="rounded-full bg-blue-50 text-blue-700 border border-blue-200"><MapPin className="h-3.5 w-3.5 mr-1" /> {item.region}</Badge>
+                          <Badge className="rounded-full bg-violet-50 text-violet-700 border border-violet-200"><Briefcase className="h-3.5 w-3.5 mr-1" /> {item.secteur}</Badge>
+                          <TrendBadge value={item.tendance} />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-semibold text-slate-900">{item.titre}</h3>
+                          <p className="text-slate-600 mt-2">{item.resume}</p>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {item.tags.map((tag) => <Badge key={tag} variant="outline" className="rounded-full">#{tag}</Badge>)}
+                        </div>
+                      </div>
+                      <div className="w-full xl:w-72 space-y-3">
+                        <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                          <div className="flex items-center justify-between text-sm"><span className="text-slate-500">Source</span><span className="font-medium">{item.source}</span></div>
+                          <div className="flex items-center justify-between text-sm mt-2"><span className="text-slate-500">Date</span><span className="font-medium">{item.date}</span></div>
+                          <div className="flex items-center justify-between text-sm mt-2"><span className="text-slate-500">Fiabilité</span><span className="font-medium">{item.fiabilite}%</span></div>
+                          <div className="mt-3"><Progress value={item.fiabilite} /></div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button className="rounded-2xl flex-1 gap-2"><ExternalLink className="h-4 w-4" /> Voir la source</Button>
+                          <Button variant="outline" className="rounded-2xl"><Filter className="h-4 w-4" /></Button>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+            {filteredArticles.length === 0 && (
+              <Card className="rounded-2xl border-dashed border-slate-300">
+                <CardContent className="p-8 text-center text-slate-500">Aucune actualité ne correspond aux filtres sélectionnés.</CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          <TabsContent value="mensuel" className="space-y-4">
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+              <Card className="xl:col-span-2 rounded-2xl shadow-sm border-slate-200">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2"><FileText className="h-5 w-5 text-slate-700" /> Rapport mensuel automatique</CardTitle>
+                  <CardDescription>Version prête à envoyer par e-mail, PDF ou Teams.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-5">
+                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                    <p className="text-sm text-slate-500 mb-1">Édito du mois</p>
+                    <p className="text-slate-800">Le mois est marqué par une intensification des besoins en logistique et une sensibilité accrue des candidats à la flexibilité. Côté concurrence, des positionnements sectoriels plus lisibles émergent, notamment en industrie.</p>
+                  </div>
+                  <div>
+                    <p className="font-medium mb-3">Top 3 signaux</p>
+                    <div className="space-y-3">
+                      {actionsMensuelles.map((a, i) => (
+                        <div key={i} className="p-4 rounded-2xl border border-slate-200 flex items-start justify-between gap-3">
+                          <div>
+                            <p className="font-medium text-slate-900">{a.titre}</p>
+                            <p className="text-sm text-slate-600 mt-1">{a.detail}</p>
+                          </div>
+                          <Badge className="rounded-full bg-slate-100 text-slate-800 border border-slate-200">{a.niveau}</Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="rounded-2xl shadow-sm border-slate-200">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2"><Building2 className="h-5 w-5 text-teal-700" /> Par agence</CardTitle>
+                  <CardDescription>Restitution locale configurable.</CardDescription>
+                </CardHeader>
+                <CardContent className="h-72">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={[
+                      { agence: 'St-É', score: 9 },
+                      { agence: 'Lyon', score: 7 },
+                      { agence: 'Roanne', score: 6 },
+                      { agence: 'Firminy', score: 5 },
+                      { agence: 'Montb.', score: 4 },
+                    ]}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="agence" />
+                      <YAxis />
+                      <Tooltip />
+                      <Bar dataKey="score" fill="#0f766e" radius={[8, 8, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
-    ${historyZone}
-    <div class="detail-meta">
-      <div class="detail-meta-info">Ajouté par <strong>${escapeHtml(b.from)}</strong> · ${b.at}${isNew(b)?' · <span style="color:var(--jh-orange);font-weight:800">✨ Nouveauté</span>':''}</div>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <button class="cover-edit-btn" onclick="changeBookCover('${id}')" title="Changer la couverture">📷 Couverture</button>
-        <button class="heart-btn" onclick="heartB('${id}')">❤️ ${b.h||0} j'aime</button>
-        <button class="delete-btn" onclick="deleteBook('${id}')" title="Supprimer ce livre">🗑️ Supprimer</button>
-      </div>
-    </div>`;
-
-  document.getElementById('m-detail').classList.add('open');
+  );
 }
-
-/* ════════════════════════════════════════════════════════════════════
-   COMMENTAIRES (livres / podcasts / vidéos)
-   ════════════════════════════════════════════════════════════════════ */
-
-// Rendu HTML de la zone commentaires (liste + formulaire d'ajout)
-function renderComments(item,kind){
-  const comments=item.comments||[];
-  const commentsHtml = comments.length
-    ? `<div class="comments-list">
-         ${comments.slice().reverse().map(c=>`
-           <div class="comment-item">
-             <div class="comment-head">
-               <div class="comment-author">${escapeHtml(c.who)}</div>
-               <div style="display:flex;align-items:center;gap:6px">
-                 <span class="comment-date">${c.at}</span>
-                 <button class="comment-delete" onclick="deleteComment('${item.id}','${c.id}','${kind}')" title="Supprimer ce commentaire">🗑️</button>
-               </div>
-             </div>
-             <div class="comment-text">${escapeHtml(c.text)}</div>
-           </div>
-         `).join('')}
-       </div>`
-    : `<div class="comments-empty">Pas encore de retour. Soyez le premier à partager !</div>`;
-
-  return `${commentsHtml}
-    <div class="comment-form">
-      <div class="comment-form-label">✍️ Partagez votre ressenti</div>
-      <input type="text" id="cmt-author-${kind}" placeholder="Votre prénom · agence" maxlength="50">
-      <textarea id="cmt-text-${kind}" placeholder="Ce que ce contenu vous a apporté, ce que vous en retenez, à qui vous le recommandez…" maxlength="500"></textarea>
-      <div class="comment-form-actions">
-        <span class="comment-hint">💡 Vos retours nourrissent la communauté</span>
-        <button class="comment-submit" onclick="addComment('${item.id}','${kind}')">Partager ✨</button>
-      </div>
-    </div>`;
-}
-
-// Ajouter un commentaire à un livre/podcast/vidéo
-async function addComment(itemId,kind){
-  const author=document.getElementById('cmt-author-'+kind).value.trim();
-  const text=document.getElementById('cmt-text-'+kind).value.trim();
-  if(!author||!text){
-    showToast('Indiquez votre prénom et votre commentaire');
-    return;
-  }
-  // Trouver l'item dans la bonne liste
-  const list=kind==='book'?books:(kind==='pod'?pods:confs);
-  const item=list.find(x=>x.id===itemId);
-  if(!item)return;
-  if(!item.comments)item.comments=[];
-  item.comments.push({
-    id:'cmt'+Date.now(),
-    who:author,
-    text:text,
-    at:new Date().toLocaleDateString('fr-FR'),
-  });
-  await save();
-  // Rafraîchir la modal détail
-  if(kind==='book')openDetail(itemId);
-  else openItemDetail(itemId,kind);
-  showToast('💬 Merci pour votre retour !');
-}
-
-async function deleteComment(itemId,commentId,kind){
-  if(!confirm('Supprimer ce commentaire ?'))return;
-  const list=kind==='book'?books:(kind==='pod'?pods:confs);
-  const item=list.find(x=>x.id===itemId);
-  if(!item||!item.comments)return;
-  item.comments=item.comments.filter(c=>c.id!==commentId);
-  await save();
-  if(kind==='book')openDetail(itemId);
-  else openItemDetail(itemId,kind);
-}
-
-// Modal détail pour podcasts et vidéos
-function openItemDetail(id,kind){
-  const list=kind==='pod'?pods:confs;
-  const item=list.find(x=>x.id===id);
-  if(!item)return;
-  detailId=id;
-  const c=getcat(item.cat);
-
-  // Header coloré (gradient à la couleur de la catégorie)
-  const dcover=document.getElementById('d-cover');
-  dcover.style.background=`linear-gradient(135deg,${c.color}cc 0%,${c.color}77 50%,#043A51 100%)`;
-  dcover.innerHTML='';
-  // Une grosse icône au centre (pas de couverture pour podcast/vidéo)
-  let bigIco='🎧';
-  let typeLabel='Podcast';
-  if(kind==='conf'){
-    const t=getTypeConf(item.type);
-    bigIco=t.icon;
-    typeLabel=t.label;
-  }
-  const iconEl=document.createElement('div');
-  iconEl.style.cssText='position:absolute;top:50%;left:50%;transform:translate(-50%,-65%);font-size:88px;filter:drop-shadow(0 6px 16px rgba(0,0,0,.3));z-index:0';
-  iconEl.textContent=bigIco;
-  dcover.appendChild(iconEl);
-
-  const overlay=document.createElement('div');
-  overlay.className='dcover-info';
-  overlay.innerHTML=`
-    <div class="dcat-chip" style="background:rgba(255,255,255,.95);color:${c.color}">${c.icon} ${c.label} · ${typeLabel}</div>
-    <div class="dtitle">${escapeHtml(item.ti)}</div>
-    ${(item.cr||item.sp)?`<div class="dauthor">par ${escapeHtml(item.cr||item.sp)}</div>`:''}`;
-  dcover.appendChild(overlay);
-
-  // Bouton "Ouvrir le lien" en évidence
-  const linkZone=`<a href="${escapeAttr(item.url)}" target="_blank" rel="noopener" class="open-link-btn">
-    ${kind==='pod'?'🎧 Écouter':'▶ Regarder'} sur le site →
-  </a>`;
-
-  const delFn=kind==='pod'?'deletePod':'deleteConf';
-
-  document.getElementById('d-body').innerHTML=`
-    ${linkZone}
-    ${item.desc?`<div style="margin-top:1rem">
-      <div class="section-label">Pourquoi le partager</div>
-      <div class="sum-block">${escapeHtml(item.desc)}</div>
-    </div>`:''}
-    <div style="margin-top:1.25rem">
-      <div class="section-label">💬 Ce que la communauté en dit (${(item.comments||[]).length})</div>
-      <div id="comments-zone">${renderComments(item,kind)}</div>
-    </div>
-    <div class="detail-meta">
-      <div class="detail-meta-info">Partagé par <strong>${escapeHtml(item.from)}</strong> · ${item.at}</div>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <button class="heart-btn" onclick="heartI('${id}')">❤️ ${item.h||0} j'aime</button>
-        <button class="delete-btn" onclick="${delFn}('${id}')" title="Supprimer">🗑️ Supprimer</button>
-      </div>
-    </div>`;
-
-  document.getElementById('m-detail').classList.add('open');
-}
-
-/* ════════════════════════════════════════════════════════════════════
-   EMPRUNT / RETOUR / LIKES
-   ════════════════════════════════════════════════════════════════════ */
-function startBorrow(id){
-  const b=books.find(x=>x.id===id);if(!b||!b.avail)return;
-  pendingBorrowId=id;
-  document.getElementById('borrow-book-title').textContent=b.ti;
-  closeMod('m-detail');
-  document.getElementById('m-borrow').classList.add('open');
-  setTimeout(()=>document.getElementById('borrow-name').focus(),120);
-}
-
-async function confirmBorrow(){
-  const nm=document.getElementById('borrow-name').value.trim();
-  if(!nm){document.getElementById('borrow-name').focus();return}
-  const b=books.find(x=>x.id===pendingBorrowId);if(!b)return;
-  const today=new Date().toLocaleDateString('fr-FR');
-  b.avail=false;b.by=nm;b.bat=today;
-  // Historique : on enregistre l'emprunt
-  if(!b.history)b.history=[];
-  b.history.push({who:nm,borrowedAt:today,returnedAt:null});
-  // Si la personne était dans la wishlist, on la retire (c'est son tour !)
-  if(b.wishlist&&b.wishlist.length){
-    b.wishlist=b.wishlist.filter(p=>p.toLowerCase()!==nm.toLowerCase());
-  }
-  await save();closeMod('m-borrow');
-  document.getElementById('borrow-name').value='';
-  render();
-  showToast(`📖 « ${b.ti} » est à vous — direction l'atelier du siège (R+2) !`);
-}
-
-async function doReturn(id){
-  const b=books.find(x=>x.id===id);if(!b)return;
-  const today=new Date().toLocaleDateString('fr-FR');
-  // Historique : on complète la dernière entrée non rendue avec la date de retour
-  if(b.history&&b.history.length){
-    const lastEntry=[...b.history].reverse().find(h=>!h.returnedAt);
-    if(lastEntry)lastEntry.returnedAt=today;
-  }
-  b.avail=true;b.by=null;b.bat=null;
-  // Si une personne attend, on la signale dans le toast
-  const nextPerson=b.wishlist&&b.wishlist.length>0?b.wishlist[0]:null;
-  await save();closeMod('m-detail');render();
-  if(nextPerson){
-    showToast(`✅ « ${b.ti} » disponible — au tour de ${nextPerson} !`);
-  } else {
-    showToast(`✅ « ${b.ti} » à reposer à l'atelier — merci !`);
-  }
-}
-
-async function heartB(id){
-  const b=books.find(x=>x.id===id);if(!b)return;
-  b.h=(b.h||0)+1;await save();render();
-  if(detailId===id)openDetail(id);
-}
-
-async function heartI(id){
-  const i=pods.find(x=>x.id===id)||confs.find(x=>x.id===id);if(!i)return;
-  i.h=(i.h||0)+1;await save();render();
-}
-
-// Wishlist : ajouter / retirer son nom de la liste d'attente
-async function toggleWishlist(id){
-  const b=books.find(x=>x.id===id);if(!b)return;
-  if(!b.wishlist)b.wishlist=[];
-  // Demander le prénom + agence
-  const name=prompt("Votre prénom et agence (pour qu'on vous prévienne quand le livre revient) :","");
-  if(!name||!name.trim())return;
-  const trimmed=name.trim();
-  // Toggle : si déjà dans la liste, on retire ; sinon on ajoute
-  const idx=b.wishlist.findIndex(p=>p.toLowerCase()===trimmed.toLowerCase());
-  if(idx>=0){
-    b.wishlist.splice(idx,1);
-    showToast(`❌ Retiré de la liste d'attente`);
-  } else {
-    b.wishlist.push(trimmed);
-    showToast(`⭐ Vous êtes #${b.wishlist.length} sur la liste — on vous préviendra !`);
-  }
-  await save();render();
-  if(detailId===id)openDetail(id);
-}
-
-/* ════════════════════════════════════════════════════════════════════
-   SUPPRESSION (avec confirmation)
-   ════════════════════════════════════════════════════════════════════ */
-async function deleteBook(id){
-  const b=books.find(x=>x.id===id);if(!b)return;
-  if(!b.avail){
-    showToast("Ce livre est emprunté — il faut d'abord le rendre");
-    return;
-  }
-  if(!confirm(`Supprimer définitivement « ${b.ti} » de la bibliothèque ?\n\nCette action est irréversible.`))return;
-  books=books.filter(x=>x.id!==id);
-  await save();
-  closeMod('m-detail');
-  render();
-  showToast(`🗑️ « ${b.ti} » supprimé de la bibliothèque`);
-}
-
-async function deletePod(id){
-  const p=pods.find(x=>x.id===id);if(!p)return;
-  if(!confirm(`Supprimer définitivement « ${p.ti} » ?\n\nCette action est irréversible.`))return;
-  pods=pods.filter(x=>x.id!==id);
-  await save();render();
-  showToast(`🗑️ Podcast supprimé`);
-}
-
-async function deleteConf(id){
-  const c=confs.find(x=>x.id===id);if(!c)return;
-  if(!confirm(`Supprimer définitivement « ${c.ti} » ?\n\nCette action est irréversible.`))return;
-  confs=confs.filter(x=>x.id!==id);
-  await save();render();
-  showToast(`🗑️ Conférence supprimée`);
-}
-
-/* ════════════════════════════════════════════════════════════════════
-   AJOUT
-   ════════════════════════════════════════════════════════════════════ */
-function clearIds(ids){ids.forEach(id=>{const el=document.getElementById(id);if(el)el.value=''})}
-
-async function addBook(){
-  const ti=document.getElementById('b-ti').value.trim();
-  const au=document.getElementById('b-au').value.trim();
-  if(!ti||!au){showToast("Le titre et l'auteur sont obligatoires");return}
-  books.unshift({
-    id:'b'+Date.now(),ti,au,
-    cat:document.getElementById('b-cat').value,
-    isbn:document.getElementById('b-isbn').value.trim(),
-    coverUrl:document.getElementById('b-cover-url').value.trim(),
-    sum:document.getElementById('b-sum').value.trim(),
-    avail:true,by:null,bat:null,
-    from:'Un Jhooder',
-    at:new Date().toLocaleDateString('fr-FR'),
-    addedAt:Date.now(),
-    wishlist:[],
-    history:[],
-    comments:[],
-    h:0
-  });
-  await save();closeMod('m-book');
-  clearIds(['b-ti','b-au','b-isbn','b-sum','b-key','b-search','b-cover-url']);
-  hideCoverPreview();
-  // Reset du bouton upload couverture
-  const upBtn=document.getElementById('cover-upload-btn');
-  if(upBtn){
-    upBtn.classList.remove('has-image');
-    document.getElementById('cover-upload-text').textContent='Pas la bonne couverture ? Ajoutez votre photo';
-  }
-  const upInput=document.getElementById('cover-upload-input');
-  if(upInput)upInput.value='';
-  document.getElementById('search-results').classList.add('hidden');
-  document.getElementById('isbn-hint').className='isbn-hint';
-  document.getElementById('isbn-hint').innerHTML='💡 Astuce : tapez quelques mots du titre, choisissez dans la liste, et tout se remplit !';
-  setTab('books');render();showToast('📚 Livre ajouté — merci pour la communauté !');
-}
-
-async function addPod(){
-  const ti=document.getElementById('p-ti').value.trim();
-  const url=document.getElementById('p-url').value.trim();
-  if(!ti||!url){showToast('Titre et lien sont obligatoires');return}
-  pods.unshift({
-    id:'p'+Date.now(),ti,
-    cr:document.getElementById('p-cr').value.trim(),
-    cat:document.getElementById('p-cat').value,
-    url,
-    desc:document.getElementById('p-desc').value.trim(),
-    from:'Un Jhooder',at:new Date().toLocaleDateString('fr-FR'),
-    comments:[],h:0
-  });
-  await save();closeMod('m-pod');clearIds(['p-ti','p-cr','p-url','p-desc']);
-  setTab('pods');render();showToast('🎧 Podcast partagé — merci !');
-}
-
-async function addConf(){
-  const ti=document.getElementById('c-ti').value.trim();
-  const url=document.getElementById('c-url').value.trim();
-  if(!ti||!url){showToast('Titre et lien sont obligatoires');return}
-  confs.unshift({
-    id:'c'+Date.now(),ti,
-    sp:document.getElementById('c-sp').value.trim(),
-    cat:document.getElementById('c-cat').value,
-    type:document.getElementById('c-type').value,
-    url,
-    desc:document.getElementById('c-desc').value.trim(),
-    from:'Un Jhooder',at:new Date().toLocaleDateString('fr-FR'),
-    comments:[],h:0
-  });
-  await save();closeMod('m-conf');clearIds(['c-ti','c-sp','c-url','c-desc']);
-  setTab('confs');render();showToast('🎬 Contenu partagé — merci !');
-}
-
-/* ════════════════════════════════════════════════════════════════════
-   RECHERCHE DE LIVRE (OpenLibrary search.json — par titre, auteur, ISBN)
-   ════════════════════════════════════════════════════════════════════ */
-
-// Debounce timer pour ne pas faire 50 requêtes en tapant
-let searchTimer=null;
-let lastSearchQuery='';
-
-function onBookSearchInput(){
-  const input=document.getElementById('b-search');
-  const q=input.value.trim();
-  const results=document.getElementById('search-results');
-
-  if(q.length<3){
-    results.classList.add('hidden');
-    return;
-  }
-
-  // Debounce 350ms : on attend que l'utilisateur fasse une pause de frappe
-  clearTimeout(searchTimer);
-  results.classList.remove('hidden');
-  results.innerHTML='<div class="search-loading">🔄 Recherche en cours…</div>';
-  searchTimer=setTimeout(()=>doBookSearch(q),350);
-}
-
-function onBookSearchKey(e){
-  if(e.key==='Escape'){
-    document.getElementById('search-results').classList.add('hidden');
-  } else if(e.key==='Enter'){
-    e.preventDefault();
-    // Si un seul résultat visible, le sélectionner
-    const first=document.querySelector('.search-result-item');
-    if(first)first.click();
-  }
-}
-
-async function doBookSearch(q){
-  // Garder uniquement la dernière requête (anti-race condition)
-  lastSearchQuery=q;
-  const results=document.getElementById('search-results');
-
-  try{
-    // Détecter si c'est un ISBN (10-13 chiffres)
-    const cleanQ=q.replace(/[\s-]/g,'');
-    const isIsbn=/^\d{10,13}$/.test(cleanQ);
-
-    // 1) Recherche Google Books en priorité (bien meilleur pour les éditions FR)
-    //    - langRestrict=fr pour ne récupérer QUE les éditions françaises
-    //    - country=FR pour le marché français
-    let googleUrl;
-    if(isIsbn){
-      googleUrl=`https://www.googleapis.com/books/v1/volumes?q=isbn:${cleanQ}&maxResults=10&langRestrict=fr&country=FR`;
-    } else {
-      googleUrl=`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&maxResults=15&langRestrict=fr&country=FR&orderBy=relevance`;
-    }
-
-    const r=await fetch(googleUrl);
-    const d=await r.json();
-
-    // Si la requête a changé entre-temps, on ignore
-    if(lastSearchQuery!==q)return;
-
-    let docs=[];
-    if(d.items&&d.items.length){
-      // Mapper Google Books vers notre format unifié
-      docs=d.items.map(item=>{
-        const v=item.volumeInfo||{};
-        const ids=v.industryIdentifiers||[];
-        // Préférer l'ISBN_13, sinon ISBN_10
-        const isbn13=ids.find(i=>i.type==='ISBN_13');
-        const isbn10=ids.find(i=>i.type==='ISBN_10');
-        const isbn=(isbn13&&isbn13.identifier)||(isbn10&&isbn10.identifier)||'';
-        return {
-          source:'google',
-          googleId:item.id,
-          title:v.title||'(Sans titre)',
-          subtitle:v.subtitle||'',
-          authors:v.authors||[],
-          year:v.publishedDate?v.publishedDate.substring(0,4):'',
-          isbn:isbn,
-          language:v.language||'',
-          description:v.description||'',
-          thumbnail:(v.imageLinks&&(v.imageLinks.thumbnail||v.imageLinks.smallThumbnail))||'',
-        };
-      });
-    }
-
-    // 2) Si Google Books ne donne rien (ou peu), on tente OpenLibrary en complément
-    if(docs.length<3){
-      try{
-        const olUrl=isIsbn
-          ? `https://openlibrary.org/search.json?isbn=${cleanQ}&limit=10&fields=key,title,author_name,first_publish_year,isbn,cover_i,language`
-          : `https://openlibrary.org/search.json?q=${encodeURIComponent(q)}&language=fre&limit=10&fields=key,title,author_name,first_publish_year,isbn,cover_i,language`;
-        const r2=await fetch(olUrl);
-        const d2=await r2.json();
-        if(d2.docs&&d2.docs.length){
-          const olDocs=d2.docs.map(doc=>({
-            source:'openlibrary',
-            workKey:doc.key||'',
-            title:doc.title||'(Sans titre)',
-            subtitle:'',
-            authors:doc.author_name||[],
-            year:doc.first_publish_year||'',
-            isbn:(doc.isbn&&doc.isbn[0])||'',
-            language:(doc.language&&doc.language[0])||'',
-            description:'',
-            thumbnail:doc.cover_i?`https://covers.openlibrary.org/b/id/${doc.cover_i}-S.jpg`:'',
-          }));
-          // Concaténer en évitant les doublons (par ISBN ou titre+auteur)
-          const seen=new Set(docs.map(d=>d.isbn||d.title.toLowerCase()));
-          for(const od of olDocs){
-            const key=od.isbn||od.title.toLowerCase();
-            if(!seen.has(key)){docs.push(od);seen.add(key)}
-          }
-        }
-      }catch{}
-    }
-
-    if(!docs.length){
-      results.innerHTML=`<div class="search-empty"><strong>Aucun livre trouvé pour « ${escapeHtml(q)} »</strong>Vous pouvez quand même remplir les champs ci-dessous à la main.</div>`;
-      return;
-    }
-
-    results.innerHTML=docs.slice(0,8).map((doc,idx)=>{
-      const title=doc.title;
-      const author=doc.authors.join(', ')||'(Auteur inconnu)';
-      const year=doc.year;
-      const thumb=doc.thumbnail;
-      const langBadge=doc.language==='fr'||doc.language==='fre'?'<span class="lang-badge">🇫🇷</span>':'';
-
-      const coverHtml=thumb
-        ?`<img class="search-result-cover" src="${thumb}" alt="" onerror="this.outerHTML='<div class=\\'search-result-cover-fb\\'>📖</div>'">`
-        :`<div class="search-result-cover-fb">📖</div>`;
-
-      // On ne stocke que les infos clés (la description sera récupérée au clic)
-      const dataPayload={
-        source:doc.source,
-        title:doc.title,
-        subtitle:doc.subtitle||'',
-        author:author,
-        isbn:doc.isbn,
-        googleId:doc.googleId||'',
-        workKey:doc.workKey||'',
-        thumbnail:doc.thumbnail||'',
-        description:doc.description||'',
-      };
-
-      return `<button class="search-result-item" type="button"
-                data-idx="${idx}"
-                onclick='selectBook(${JSON.stringify(dataPayload).replace(/'/g,"&#39;")})'>
-        ${coverHtml}
-        <div class="search-result-info">
-          <div class="search-result-title">${langBadge}${escapeHtml(title)}</div>
-          <div class="search-result-author">${escapeHtml(author)}</div>
-          ${year?`<div class="search-result-year">📅 ${year}</div>`:''}
-        </div>
-      </button>`;
-    }).join('');
-
-  } catch(e){
-    console.error(e);
-    if(lastSearchQuery===q){
-      results.innerHTML='<div class="search-empty"><strong>Erreur de connexion</strong>Vérifiez votre connexion internet.</div>';
-    }
-  }
-}
-
-// Quand l'utilisateur clique sur un résultat
-async function selectBook(book){
-  const {source,title,subtitle,author,isbn,googleId,workKey,thumbnail,description}=book;
-  const hint=document.getElementById('isbn-hint');
-
-  // 1. Remplir les champs principaux
-  document.getElementById('b-ti').value=title||'';
-  document.getElementById('b-au').value=author||'';
-  document.getElementById('b-isbn').value=isbn||'';
-  // Stocker l'URL de couverture Google Books améliorée pour qu'elle soit utilisée dans la carte
-  let saveCoverUrl='';
-  if(thumbnail){
-    saveCoverUrl=thumbnail.replace(/&zoom=\d+/,'&zoom=1').replace('&edge=curl','').replace(/^http:/,'https:');
-  }
-  document.getElementById('b-cover-url').value=saveCoverUrl;
-
-  // 2. Cacher le dropdown et afficher le titre choisi dans l'input
-  document.getElementById('search-results').classList.add('hidden');
-  document.getElementById('b-search').value=title||'';
-
-  // 3. Afficher la prévisualisation avec la grosse couverture
-  showCoverPreviewWithUrl(thumbnail,isbn,title,author);
-
-  // 4. Récupérer le résumé (en français si possible)
-  hint.className='isbn-hint';
-  hint.innerHTML='🔄 Récupération du résumé…';
-
-  let desc='';
-
-  // 4a. Si Google Books a déjà une description, on la prend (elle est déjà en français vu langRestrict=fr)
-  if(description&&description.trim()){
-    desc=description;
-  }
-  // 4b. Sinon, on appelle Google Books en détail pour avoir une description plus complète
-  else if(googleId){
-    try{
-      const r=await fetch(`https://www.googleapis.com/books/v1/volumes/${googleId}`);
-      const d=await r.json();
-      desc=(d.volumeInfo&&d.volumeInfo.description)||'';
-    }catch{}
-  }
-  // 4c. Si toujours rien et qu'on a un ISBN, on essaie une nouvelle recherche Google Books par ISBN
-  if(!desc&&isbn){
-    try{
-      const r=await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}&langRestrict=fr&country=FR`);
-      const d=await r.json();
-      if(d.items&&d.items[0]){
-        desc=(d.items[0].volumeInfo&&d.items[0].volumeInfo.description)||'';
-      }
-    }catch{}
-  }
-  // 4d. Dernier fallback : OpenLibrary (peut être en anglais)
-  if(!desc&&workKey){
-    try{
-      const r=await fetch(`https://openlibrary.org${workKey}.json`);
-      const d=await r.json();
-      let olDesc=d.description;
-      if(typeof olDesc==='object')olDesc=olDesc.value;
-      if(olDesc)desc=olDesc;
-    }catch{}
-  }
-
-  // Nettoyer le résumé (retirer HTML, marqueurs Markdown, longueur max)
-  if(desc){
-    desc=desc.replace(/<[^>]+>/g,' ')                       // retirer HTML
-             .replace(/\(\[source\][^)]*\)/gi,'')            // notes [source]
-             .replace(/\[([^\]]*)\]\([^)]*\)/g,'$1')         // [text](url) -> text
-             .replace(/\*\*([^*]+)\*\*/g,'$1')               // **bold** -> bold
-             .replace(/\s+/g,' ').trim();
-    if(desc.length>500)desc=desc.substring(0,497)+'…';
-    const sumField=document.getElementById('b-sum');
-    if(!sumField.value.trim())sumField.value=desc;
-  }
-
-  hint.className='isbn-hint success';
-  hint.innerHTML=desc
-    ? '✅ Tout est rempli ! Personnalisez le résumé si vous voulez.'
-    : '✅ Livre récupéré ! Pas de résumé trouvé — utilisez ✨ Générer avec l\'IA ou écrivez le vôtre.';
-  showToast('📘 « '+title+' »');
-}
-
-// Cache si on clique en dehors
-document.addEventListener('click',(e)=>{
-  const wrap=document.querySelector('.isbn-row');
-  const results=document.getElementById('search-results');
-  if(wrap&&results&&!wrap.contains(e.target)){
-    results.classList.add('hidden');
-  }
-});
-
-// Nouvelle version : accepte une URL directe (Google Books thumbnail) et fallback sur ISBN
-function showCoverPreviewWithUrl(thumbnailUrl,isbn,title,author){
-  const preview=document.getElementById('cover-preview');
-  if(!preview)return;
-  // Priorité : 1. URL Google Books, 2. cover par ISBN OpenLibrary
-  let coverUrl=thumbnailUrl||'';
-  // Améliorer la qualité Google Books : remplacer zoom=1 par zoom=2 (meilleure résolution)
-  if(coverUrl)coverUrl=coverUrl.replace(/&zoom=\d+/,'&zoom=2').replace('&edge=curl','');
-  // Fallback OpenLibrary si pas d'URL
-  if(!coverUrl&&isbn)coverUrl=`https://covers.openlibrary.org/b/isbn/${isbn}-M.jpg`;
-
-  const img=document.getElementById('cover-preview-img');
-  img.src=coverUrl||'';
-  img.onerror=function(){
-    // Si Google Books échoue, on tente OpenLibrary par ISBN
-    if(isbn&&this.src!==`https://covers.openlibrary.org/b/isbn/${isbn}-M.jpg`){
-      this.src=`https://covers.openlibrary.org/b/isbn/${isbn}-M.jpg`;
-    } else {
-      this.style.visibility='hidden';
-    }
-  };
-  img.onload=function(){this.style.visibility='visible'};
-  document.getElementById('cover-preview-title').textContent=title||'(Pas de titre)';
-  document.getElementById('cover-preview-author').textContent=author||'(Auteur inconnu)';
-  preview.style.display='flex';
-}
-
-function showCoverPreview(isbn,coverId,title,author){
-  const preview=document.getElementById('cover-preview');
-  if(!preview)return;
-  // Source de couverture (par cover_id si dispo, sinon par ISBN)
-  let coverUrl='';
-  if(coverId)coverUrl=`https://covers.openlibrary.org/b/id/${coverId}-M.jpg`;
-  else if(isbn)coverUrl=`https://covers.openlibrary.org/b/isbn/${isbn}-M.jpg`;
-  document.getElementById('cover-preview-img').src=coverUrl||'';
-  document.getElementById('cover-preview-img').onerror=function(){this.style.visibility='hidden'};
-  document.getElementById('cover-preview-img').onload=function(){this.style.visibility='visible'};
-  document.getElementById('cover-preview-title').textContent=title||'(Pas de titre)';
-  document.getElementById('cover-preview-author').textContent=author||'(Auteur inconnu)';
-  preview.style.display='flex';
-}
-
-function hideCoverPreview(){
-  const preview=document.getElementById('cover-preview');
-  if(preview)preview.style.display='none';
-}
-
-/* ════════════════════════════════════════════════════════════════════
-   UPLOAD COUVERTURE MANUEL
-   ════════════════════════════════════════════════════════════════════ */
-
-// Redimensionne une image avant de la stocker (limite la taille du localStorage)
-function resizeImage(file,maxWidth,maxHeight,quality){
-  return new Promise((resolve,reject)=>{
-    const reader=new FileReader();
-    reader.onload=(e)=>{
-      const img=new Image();
-      img.onload=()=>{
-        // Calcul du ratio pour préserver les proportions
-        let w=img.width,h=img.height;
-        if(w>maxWidth){h*=maxWidth/w;w=maxWidth}
-        if(h>maxHeight){w*=maxHeight/h;h=maxHeight}
-        // Dessiner sur un canvas
-        const canvas=document.createElement('canvas');
-        canvas.width=w;canvas.height=h;
-        const ctx=canvas.getContext('2d');
-        ctx.imageSmoothingQuality='high';
-        ctx.drawImage(img,0,0,w,h);
-        resolve(canvas.toDataURL('image/jpeg',quality));
-      };
-      img.onerror=reject;
-      img.src=e.target.result;
-    };
-    reader.onerror=reject;
-    reader.readAsDataURL(file);
-  });
-}
-
-// Quand l'utilisateur upload une couverture dans le modal d'ajout
-async function handleCoverUpload(event){
-  const file=event.target.files[0];
-  if(!file)return;
-  if(!file.type.startsWith('image/')){
-    showToast('⚠️ Choisissez un fichier image (JPG, PNG…)');
-    return;
-  }
-  showToast('🔄 Préparation de l\'image…');
-  try{
-    // Redimensionner à max 600x900 (taille raisonnable pour une couverture de livre)
-    const dataUrl=await resizeImage(file,600,900,0.85);
-    document.getElementById('b-cover-url').value=dataUrl;
-    // Mettre à jour la prévisualisation
-    const preview=document.getElementById('cover-preview');
-    const img=document.getElementById('cover-preview-img');
-    img.src=dataUrl;
-    img.style.visibility='visible';
-    if(!document.getElementById('cover-preview-title').textContent){
-      document.getElementById('cover-preview-title').textContent='Photo personnalisée';
-      document.getElementById('cover-preview-author').textContent='Couverture ajoutée à la main';
-    }
-    document.querySelector('.cover-preview-status').textContent='📷 Couverture personnalisée';
-    document.querySelector('.cover-preview-status').style.color='#854D0E';
-    preview.style.display='flex';
-    // Marquer le bouton comme actif
-    const btn=document.getElementById('cover-upload-btn');
-    btn.classList.add('has-image');
-    document.getElementById('cover-upload-text').textContent='✓ Photo ajoutée — cliquez pour changer';
-    showToast('✅ Couverture ajoutée !');
-  }catch(e){
-    console.error(e);
-    showToast('❌ Erreur lors du chargement de l\'image');
-  }
-}
-
-// Modifier la couverture d'un livre déjà ajouté (depuis sa fiche détail)
-function changeBookCover(id){
-  // Créer un input file invisible et le déclencher
-  const input=document.createElement('input');
-  input.type='file';
-  input.accept='image/*';
-  input.onchange=async(event)=>{
-    const file=event.target.files[0];
-    if(!file)return;
-    if(!file.type.startsWith('image/')){
-      showToast('⚠️ Choisissez un fichier image');
-      return;
-    }
-    showToast('🔄 Préparation de l\'image…');
-    try{
-      const dataUrl=await resizeImage(file,600,900,0.85);
-      const b=books.find(x=>x.id===id);
-      if(!b)return;
-      b.coverUrl=dataUrl;
-      coverErr[id]=false;  // reset l'éventuelle erreur précédente
-      await save();
-      render();
-      // Rouvrir la fiche pour montrer la nouvelle couverture
-      openDetail(id);
-      showToast('✅ Couverture mise à jour !');
-    }catch(e){
-      console.error(e);
-      showToast('❌ Erreur lors du chargement');
-    }
-  };
-  input.click();
-}
-
-/* ════════════════════════════════════════════════════════════════════
-   SCANNER CODE-BARRES (ZXing — caméra du téléphone/PC)
-   ════════════════════════════════════════════════════════════════════ */
-let scanReader=null;
-let scanControls=null;
-
-async function startScan(){
-  // Vérifier que la lib est chargée
-  if(typeof ZXingBrowser==='undefined'){
-    showToast('⚠️ Scanner non chargé — saisissez l\'ISBN à la main');
-    return;
-  }
-  // Vérifier le support caméra
-  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
-    showToast('⚠️ Caméra non disponible sur cet appareil');
-    return;
-  }
-
-  document.getElementById('m-scan').classList.add('open');
-  const status=document.getElementById('scan-status');
-  status.className='scan-status';
-  status.textContent='📷 Activation de la caméra…';
-
-  try{
-    scanReader=new ZXingBrowser.BrowserMultiFormatReader();
-    const videoEl=document.getElementById('scan-video');
-
-    // Préférer la caméra arrière (mobile)
-    const devices=await ZXingBrowser.BrowserMultiFormatReader.listVideoInputDevices();
-    let deviceId=null;
-    if(devices&&devices.length){
-      // Chercher la caméra arrière
-      const backCam=devices.find(d=>/back|rear|environment/i.test(d.label));
-      deviceId=(backCam||devices[devices.length-1]).deviceId;
-    }
-
-    status.textContent='🔍 Pointez vers le code-barres…';
-
-    scanControls=await scanReader.decodeFromVideoDevice(deviceId,videoEl,(result,err)=>{
-      if(result){
-        const code=result.getText();
-        // Vérifier que c'est bien un ISBN (10 ou 13 chiffres, commence souvent par 978/979)
-        if(/^\d{10}(\d{3})?$/.test(code)){
-          status.className='scan-status success';
-          status.textContent=`✓ Code détecté : ${code}`;
-          stopScan();
-          // On met l'ISBN dans le champ de recherche, ce qui déclenche la recherche
-          const searchInput=document.getElementById('b-search');
-          searchInput.value=code;
-          searchInput.focus();
-          onBookSearchInput();
-        }
-      }
-    });
-  } catch(e){
-    console.error(e);
-    status.className='scan-status error';
-    if(e.name==='NotAllowedError'){
-      status.textContent='⚠️ Accès caméra refusé. Activez-le dans les réglages du navigateur.';
-    } else {
-      status.textContent='⚠️ Impossible de démarrer la caméra';
-    }
-  }
-}
-
-function stopScan(){
-  if(scanControls){try{scanControls.stop()}catch{} scanControls=null}
-  if(scanReader){try{scanReader.reset&&scanReader.reset()}catch{} scanReader=null}
-  closeMod('m-scan');
-}
-
-/* ════════════════════════════════════════════════════════════════════
-   IA
-   ════════════════════════════════════════════════════════════════════ */
-async function genSum(){
-  const ti=document.getElementById('b-ti').value.trim();
-  const au=document.getElementById('b-au').value.trim();
-  const key=document.getElementById('b-key').value.trim();
-  if(!ti||!au){showToast("Entrez d'abord le titre et l'auteur");return}
-  if(!key){showToast('Entrez votre clé API Anthropic ci-dessous');return}
-  const btn=document.getElementById('ai-btn');
-  btn.textContent='⏳ Génération…';btn.disabled=true;
-  try{
-    const r=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{
-        'Content-Type':'application/json',
-        'x-api-key':key,
-        'anthropic-version':'2023-06-01',
-        'anthropic-dangerous-direct-browser-access':'true'
-      },
-      body:JSON.stringify({
-        model:'claude-haiku-4-5-20251001',
-        max_tokens:300,
-        messages:[{role:'user',content:`Écris un résumé court et inspirant (3-4 phrases max) du livre "${ti}" de ${au}. Le ton doit donner envie de lire, mettre en valeur ce que le lecteur va gagner concrètement. Réponds uniquement avec le résumé en français, sans titre ni guillemets.`}]
-      })
-    });
-    const d=await r.json();
-    document.getElementById('b-sum').value=d.content?.[0]?.text||'';
-    showToast('✨ Résumé généré !');
-  }catch{showToast('Erreur — vérifiez votre clé API')}
-  btn.textContent="✨ Générer avec l'IA";btn.disabled=false;
-}
-
-/* ════════════════════════════════════════════════════════════════════
-   MODAL & MENU
-   ════════════════════════════════════════════════════════════════════ */
-function openMod(id){document.getElementById('add-drop').classList.remove('open');document.getElementById(id).classList.add('open')}
-function closeMod(id){document.getElementById(id).classList.remove('open')}
-function toggleAdd(){document.getElementById('add-drop').classList.toggle('open')}
-
-document.addEventListener('click',e=>{
-  const aw=document.getElementById('add-wrap');
-  if(aw&&!aw.contains(e.target))document.getElementById('add-drop').classList.remove('open');
-  document.querySelectorAll('.ov').forEach(o=>{if(e.target===o)o.classList.remove('open')});
-});
-document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){
-    document.querySelectorAll('.ov.open').forEach(o=>o.classList.remove('open'));
-    document.getElementById('add-drop').classList.remove('open');
-  }
-});
-
-/* ════════════════════════════════════════════════════════════════════
-   TOAST
-   ════════════════════════════════════════════════════════════════════ */
-let toastTimer=null;
-function showToast(msg){
-  const t=document.getElementById('toast');
-  t.textContent=msg;t.classList.add('show');
-  if(toastTimer)clearTimeout(toastTimer);
-  toastTimer=setTimeout(()=>t.classList.remove('show'),3500);
-}
-
-/* ════════════════════════════════════════════════════════════════════
-   INIT
-   ════════════════════════════════════════════════════════════════════ */
-(async()=>{
-  fillCatSelect();
-  try{await load()}catch{books=DEMO_BOOKS;pods=DEMO_PODS;confs=DEMO_CONFS}
-  document.getElementById('ilist').style.display='none';
-  try{render()}catch(e){console.warn('render error:',e)}
-})();
-</script>
-</body>
-</html>
